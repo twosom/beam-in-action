@@ -76,6 +76,8 @@ subprojects {
 
         testImplementation(platform("org.junit:junit-bom:5.9.1"))
         testImplementation("org.junit.jupiter:junit-jupiter")
+        testImplementation("org.junit.vintage:junit-vintage-engine")
+        testImplementation("junit:junit:4.13.2")
 
         if (project.name != "utils") {
             implementation(project(":utils"))
@@ -97,12 +99,6 @@ allprojects {
             options.compilerArgs.add("-parameters")
         }
 
-        build {
-            val mainClassName: String? by project
-            if (mainClassName != null) {
-                application.mainClass.set(mainClassName)
-            }
-        }
     }
 
     tasks.withType<ShadowJar> {

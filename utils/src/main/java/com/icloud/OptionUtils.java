@@ -10,14 +10,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class OptionUtils {
-    public static <T extends PipelineOptions> PipelineOptions createOption(String[] args, Class<T> optionClass) {
+
+    @SuppressWarnings("unchecked")
+    public static <T extends PipelineOptions> T createOption(String[] args, Class<T> optionClass) {
         if (optionClass != null) {
             PipelineOptionsFactory.register(optionClass);
         }
         final PipelineOptionsFactory.Builder optionsBuilder = PipelineOptionsFactory.fromArgs(args)
                 .withValidation();
 
-        return withApplicationName(
+        return (T) withApplicationName(
                 optionClass == null ?
                         optionsBuilder.create() :
                         optionsBuilder.as(optionClass)

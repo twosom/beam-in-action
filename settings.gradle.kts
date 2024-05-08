@@ -1,3 +1,6 @@
 rootProject.name = "beam-in-action"
 
-include("utils")
+listOf(
+    "utils",
+    "word-count"
+).forEach { include(it) }
