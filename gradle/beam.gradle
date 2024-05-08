@@ -1,0 +1,57 @@
+allprojects {
+    String mainClassName = project.property("mainClassName")
+
+    tasks.register("dataflow", JavaExec) {
+        if (mainClassName == null) {
+            printUsage("'dataflow'")
+            actions.clear()
+            return null
+        }
+
+        application.mainClass.set(mainClassName)
+        classpath = files(tasks.shadowJar)
+        mainClass.set(mainClassName)
+        args("--runner=dataflow", "--region=${region}", "--tempLocation=${tempLocation}")
+    }
+
+
+    tasks.register("flink", JavaExec) {
+        if (mainClassName == null) {
+            printUsage("'flink'")
+            actions.clear()
+            return null
+        }
+
+        dependencies {
+            println("Use Flink Version ::: 1.17")
+            runtimeOnly("org.apache.beam:beam-runners-flink-1.17")
+        }
+        application.mainClass.set(mainClassName)
+        classpath = files(tasks.shadowJar)
+        mainClass.set(mainClassName)
+
+        args(
+                "--runner=flink",
+                "--flinkMaster=${flinkMaster}",
+                "--checkpointingInterval=${checkpointingInterval}",
+                "--parallelism=${parallelism}"
+        )
+    }
+
+    tasks.register("local", JavaExec) {
+        if (mainClassName == null) {
+            printUsage("'local'")
+            return null
+        }
+        application.mainClass.set(mainClassName)
+        classpath = files(tasks.shadowJar)
+        mainClass.set(mainClassName)
+
+        args("--runner=direct")
+    }
+
+}
+
+def printUsage(String taskName) {
+    println("main class name must not be null, use " + taskName + " with -PmainClassName=<MAIN_CLASS_NAME>")
+}
