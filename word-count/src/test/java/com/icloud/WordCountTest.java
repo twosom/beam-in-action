@@ -3,10 +3,6 @@ package com.icloud;
 import com.icloud.WordCount.CountWords;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.options.Default;
-import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.Validation;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -18,7 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.icloud.WordCount.ExtractWordsFn;
-import static com.icloud.WordCount.FormatAsTextFn;
 
 class WordCountTest {
 

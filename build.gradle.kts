@@ -4,6 +4,8 @@ apply {
     from("gradle/beam.gradle")
 }
 
+setProperty("mainClassName", "none")
+
 plugins {
     java
     application
@@ -45,8 +47,13 @@ subprojects {
         implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.16.1")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.16.1")
 
+        // hadoop
         implementation("org.apache.hadoop:hadoop-common:3.3.6")
         implementation("org.apache.hadoop:hadoop-hdfs-client:3.3.6")
+
+        // bigquery
+        implementation("com.google.apis:google-api-services-bigquery:v2-rev459-1.25.0")
+
 
         // beam implementation
         beamImplementation(
@@ -98,7 +105,6 @@ allprojects {
         compileJava {
             options.compilerArgs.add("-parameters")
         }
-
     }
 
     tasks.withType<ShadowJar> {

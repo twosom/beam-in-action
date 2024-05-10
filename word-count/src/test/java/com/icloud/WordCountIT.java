@@ -13,7 +13,6 @@ import org.junit.runners.JUnit4;
 
 import java.util.Date;
 
-import static com.icloud.WordCount.WordCountOptions;
 import static com.icloud.WordCount.runWordCount;
 import static org.apache.beam.sdk.testing.FileChecksumMatcher.fileContentsHaveChecksum;
 import static org.hamcrest.MatcherAssert.assertThat;
