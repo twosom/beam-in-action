@@ -6,5 +6,6 @@ listOf(
     "windowed-word-count",
     "minimal-word-count",
     "window-example",
-    "view-example"
+    "view-example",
+    "to-string-example",
 ).forEach { include(it) }
