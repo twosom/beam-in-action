@@ -1,0 +1,1 @@
+# Beam Minimal Word Count
