@@ -8,4 +8,5 @@ listOf(
     "window-example",
     "view-example",
     "to-string-example",
+    "kafka-streaming",
 ).forEach { include(it) }

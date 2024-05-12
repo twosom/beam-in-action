@@ -30,12 +30,17 @@ allprojects {
         classpath = files(tasks.shadowJar)
         mainClass.set(mainClassName)
 
-        args(
+        def _args = project.property("args").split(" ")
+
+        List<String> defaultArgs = [
                 "--runner=flink",
                 "--flinkMaster=${flinkMaster}",
                 "--checkpointingInterval=${checkpointingInterval}",
                 "--parallelism=${parallelism}"
-        )
+        ]
+        defaultArgs.addAll(_args)
+        println(defaultArgs)
+        args(defaultArgs)
     }
 
     tasks.register("local", JavaExec) {
