@@ -9,4 +9,5 @@ listOf(
     "view-example",
     "to-string-example",
     "kafka-streaming",
+    "latest-example",
 ).forEach { include(it) }

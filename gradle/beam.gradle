@@ -30,7 +30,7 @@ allprojects {
         classpath = files(tasks.shadowJar)
         mainClass.set(mainClassName)
 
-        def _args = project.property("args").split(" ")
+
 
         List<String> defaultArgs = [
                 "--runner=flink",
@@ -38,7 +38,11 @@ allprojects {
                 "--checkpointingInterval=${checkpointingInterval}",
                 "--parallelism=${parallelism}"
         ]
-        defaultArgs.addAll(_args)
+        if (project.hasProperty("args")) {
+            def _args = project.property("args").split(" ")
+            defaultArgs.addAll(_args)
+        }
+
         println(defaultArgs)
         args(defaultArgs)
     }
