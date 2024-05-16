@@ -18,7 +18,7 @@ class PipelineUtils {
         @JvmStatic
         @JvmOverloads
         fun <T : PipelineOptions> create(
-            args: Array<String>,
+            args: Array<String> = arrayOf(),
             optionClass: Class<T>? = null,
         ): Pipeline =
             createOption(args, optionClass).pipeline()
