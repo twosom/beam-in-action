@@ -1,6 +1,7 @@
 package com.icloud
 
 import com.google.api.services.bigquery.model.TableRow
+import com.icloud.extensions.kv
 import org.apache.beam.sdk.io.TextIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead.Method

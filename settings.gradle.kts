@@ -19,5 +19,6 @@ listOf(
     "kafka-streaming",
     "latest-example",
     "big-query-tornadoes",
-    "join-example"
+    "join-example",
+    "filter-example",
 ).forEach { include(it) }
