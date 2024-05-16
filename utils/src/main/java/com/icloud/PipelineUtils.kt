@@ -1,26 +1,34 @@
-package com.icloud;
+package com.icloud
 
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.options.PipelineOptions;
+import com.icloud.OptionUtils.createOption
+import org.apache.beam.sdk.Pipeline
+import org.apache.beam.sdk.options.PipelineOptions
 
-import static com.icloud.OptionUtils.createOption;
+class PipelineUtils {
 
-public class PipelineUtils {
+    companion object {
+        fun <T : PipelineOptions> from(
+            args: Array<String>,
+            clazz: Class<T>,
+        ): Pair<Pipeline, T> =
+            create(args, clazz).let {
+                it to it.options.`as`(clazz)
+            }
 
-    public static Pipeline create() {
-        return create(new String[]{});
+        @JvmStatic
+        @JvmOverloads
+        fun <T : PipelineOptions> create(
+            args: Array<String>,
+            optionClass: Class<T>? = null,
+        ): Pipeline =
+            createOption(args, optionClass).pipeline()
+
+        private fun createPipeline(
+            option: PipelineOptions,
+        ): Pipeline = Pipeline.create(option)
+
+
+        internal fun <T : PipelineOptions> T.pipeline(): Pipeline =
+            createPipeline(this)
     }
-
-    public static Pipeline create(String[] args) {
-        return create(args, null);
-    }
-
-    public static <T extends PipelineOptions> Pipeline create(String[] args, Class<T> optionClass) {
-        return createPipeline(createOption(args, optionClass));
-    }
-
-    private static Pipeline createPipeline(PipelineOptions option) {
-        return Pipeline.create(option);
-    }
-
 }

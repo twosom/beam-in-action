@@ -1,7 +1,6 @@
 package com.icloud
 
 import com.google.api.services.bigquery.model.TableRow
-import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.io.TextIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead.Method
@@ -20,21 +19,6 @@ import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.TupleTag
 import org.apache.beam.sdk.values.TypeDescriptors.strings
 
-//TODO
-// could we make this extension method to static?
-// PipelineUtils().from... -> PipelineUtils.from...
-fun <T : PipelineOptions> PipelineUtils.from(
-    args: Array<String>,
-    clazz: Class<T>,
-): Pair<Pipeline, T> =
-    PipelineUtils.create(args, clazz).let {
-        it to it.options.`as`(clazz)
-    }
-
-/**
- * infix method for create KV...
- */
-infix fun <K, V> K.kv(v: V): KV<K, V> = KV.of(this, v)
 
 object JoinExample {
 
@@ -138,7 +122,8 @@ object JoinExample {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val (pipeline, options) = PipelineUtils().from(args, Options::class.java)
+        val (pipeline, options) =
+            PipelineUtils.from(args, Options::class.java)
 
         val eventsTable =
             pipeline.apply(

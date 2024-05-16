@@ -1,51 +1,43 @@
-package com.icloud;
+package com.icloud
 
-import org.apache.beam.sdk.options.ApplicationNameOptions;
-import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.util.common.ReflectHelpers;
+import org.apache.beam.sdk.options.ApplicationNameOptions
+import org.apache.beam.sdk.options.PipelineOptions
+import org.apache.beam.sdk.options.PipelineOptionsFactory
+import org.apache.beam.sdk.util.common.ReflectHelpers
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
-public class OptionUtils {
+object OptionUtils {
 
-    @SuppressWarnings("unchecked")
-    public static <T extends PipelineOptions> T createOption(String[] args, Class<T> optionClass) {
-        if (optionClass != null) {
-            PipelineOptionsFactory.register(optionClass);
+    @JvmStatic
+    @Suppress("UNCHECKED_CAST")
+    fun <T : PipelineOptions> createOption(
+        args: Array<String>,
+        optionClass: Class<T>?,
+    ): T {
+        (optionClass ?: return PipelineOptionsFactory.fromArgs(*args).withValidation().create() as T)
+            .apply { PipelineOptionsFactory.register(optionClass) }
+
+        return PipelineOptionsFactory.fromArgs(*args)
+            .withValidation().let {
+                withApplicationName(it.`as`(optionClass)) as T
+            }
+    }
+
+
+    private fun withApplicationName(
+        options: PipelineOptions,
+    ): PipelineOptions = findCallerClassName().let {
+        options.`as`(ApplicationNameOptions::class.java).appName = it
+        options
+    }
+
+    private fun findCallerClassName(): String =
+        Thread.currentThread().stackTrace.last().let {
+            try {
+                Class.forName(it.className, true, ReflectHelpers.findClassLoader())
+                    .simpleName
+            } catch (e: ClassCastException) {
+                "unknown"
+            }
         }
-        final PipelineOptionsFactory.Builder optionsBuilder = PipelineOptionsFactory.fromArgs(args)
-                .withValidation();
-
-        return (T) withApplicationName(
-                optionClass == null ?
-                        optionsBuilder.create() :
-                        optionsBuilder.as(optionClass)
-        );
-    }
-
-
-    private static PipelineOptions withApplicationName(PipelineOptions options) {
-        options.as(ApplicationNameOptions.class)
-                .setAppName(findCallerClassName());
-        return options;
-    }
-
-    private static String findCallerClassName() {
-        final List<StackTraceElement> stackElements = Arrays.stream(Thread.currentThread().getStackTrace())
-                .collect(Collectors.toList());
-
-        final StackTraceElement caller = stackElements.remove(
-                stackElements.size() - 1
-        );
-
-        try {
-            return Class.forName(caller.getClassName(), true, ReflectHelpers.findClassLoader())
-                    .getSimpleName();
-        } catch (ClassNotFoundException e) {
-            return "unknown";
-        }
-    }
 }
