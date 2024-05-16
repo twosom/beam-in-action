@@ -10,6 +10,7 @@ plugins {
     java
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    kotlin("jvm")
 }
 
 val beamVersion: String = "2.56.0"
@@ -25,6 +26,7 @@ subprojects {
         apply("java")
         apply("application")
         apply("com.github.johnrengelman.shadow")
+        apply("kotlin")
     }
 
     repositories {
@@ -40,6 +42,10 @@ subprojects {
         }
     }
     dependencies {
+        // kotlin
+        implementation(kotlin("stdlib-jdk8"))
+        implementation(kotlin("reflect"))
+
         // beam bom
         implementation(platform("org.apache.beam:beam-sdks-java-google-cloud-platform-bom:$beamVersion"))
 
@@ -52,8 +58,7 @@ subprojects {
         implementation("org.apache.hadoop:hadoop-hdfs-client:3.3.6")
 
         // bigquery
-        implementation("com.google.apis:google-api-services-bigquery:v2-rev459-1.25.0")
-
+        implementation("org.apache.beam:beam-sdks-java-io-google-cloud-platform")
 
         // beam implementation
         beamImplementation(
@@ -62,7 +67,8 @@ subprojects {
             "beam-sdks-java-extensions-google-cloud-platform-core",
             "beam-sdks-java-io-kafka",
             "beam-sdks-java-io-hadoop-file-system",
-            "beam-sdks-java-extensions-join-library"
+            "beam-sdks-java-extensions-join-library",
+            "beam-sdks-java-extensions-json-jackson",
         )
         implementation("org.apache.kafka:kafka-clients:3.4.0")
 
@@ -105,6 +111,9 @@ allprojects {
         }
         compileJava {
             options.compilerArgs.add("-parameters")
+        }
+        kotlin {
+            jvmToolchain(8)
         }
     }
 
