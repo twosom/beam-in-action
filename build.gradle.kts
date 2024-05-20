@@ -26,7 +26,7 @@ subprojects {
         apply("java")
         apply("application")
         apply("com.github.johnrengelman.shadow")
-        apply("kotlin")
+        apply("org.jetbrains.kotlin.jvm")
     }
 
     repositories {
@@ -66,6 +66,7 @@ subprojects {
             "beam-runners-direct-java",
             "beam-sdks-java-extensions-google-cloud-platform-core",
             "beam-sdks-java-io-kafka",
+            "beam-sdks-java-io-csv",
             "beam-sdks-java-io-hadoop-file-system",
             "beam-sdks-java-extensions-join-library",
             "beam-sdks-java-extensions-json-jackson",

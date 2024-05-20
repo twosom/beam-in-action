@@ -21,4 +21,5 @@ listOf(
     "big-query-tornadoes",
     "join-example",
     "filter-example",
+    "stateful-do-fn",
 ).forEach { include(it) }
