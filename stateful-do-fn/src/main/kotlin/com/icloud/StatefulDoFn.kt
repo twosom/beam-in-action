@@ -1,5 +1,6 @@
 package com.icloud
 
+import com.icloud.extensions.clear
 import com.icloud.extensions.kv
 import com.icloud.extensions.parDo
 import org.apache.beam.sdk.coders.DefaultCoder
@@ -109,6 +110,7 @@ object StatefulDoFn {
             private val LOG: Logger = LoggerFactory.getLogger(BufferFn::class.java)
         }
 
+        @StateId("counter")
         private val counterSpec: StateSpec<ValueState<Int>> = StateSpecs.value()
 
         @StateId("buffer")
@@ -137,8 +139,8 @@ object StatefulDoFn {
             if (isEnroute || isNotEnroute) {
                 bufferState.read().forEach { output.output(it.rideStatus kv it) }
                     .apply {
-                        counterState.clear().apply { println("Counter state cleared...") }
-                        bufferState.clear().apply { println("Buffer state cleared...") }
+                        counterState.clear("Counter state cleared...")
+                        bufferState.clear("Buffer state cleared...")
                     }
             }
         }
