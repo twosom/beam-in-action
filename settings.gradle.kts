@@ -22,4 +22,5 @@ listOf(
     "join-example",
     "filter-example",
     "stateful-do-fn",
+    "timer-do-fn",
 ).forEach { include(it) }
