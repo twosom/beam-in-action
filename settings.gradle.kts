@@ -23,4 +23,5 @@ listOf(
     "filter-example",
     "stateful-do-fn",
     "timer-do-fn",
+    "custom-windows",
 ).forEach { include(it) }
