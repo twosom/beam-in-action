@@ -25,3 +25,10 @@ listOf(
     "timer-do-fn",
     "custom-windows",
 ).forEach { include(it) }
+
+
+// module settings for beam book
+listOf(
+    "ch1",
+    "ch2",
+).forEach { include("beam-book:$it") }

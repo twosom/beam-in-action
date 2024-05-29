@@ -13,7 +13,7 @@ plugins {
     kotlin("jvm")
 }
 
-val beamVersion: String = "2.56.0"
+val beamVersion: String = "2.54.0"
 
 group = "com.icloud"
 version = "1.0-SNAPSHOT"
