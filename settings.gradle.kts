@@ -24,6 +24,7 @@ listOf(
     "stateful-do-fn",
     "timer-do-fn",
     "custom-windows",
+    "test-stream",
 ).forEach { include(it) }
 
 

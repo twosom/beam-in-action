@@ -14,7 +14,9 @@ object OptionUtils {
         args: Array<String>,
         optionClass: Class<T>?,
     ): T {
-        (optionClass ?: return PipelineOptionsFactory.fromArgs(*args).withValidation().create() as T)
+        (optionClass ?: return PipelineOptionsFactory.fromArgs(*args).withValidation()
+            .create() as T)
+            .let { withApplicationName(it as T) }
             .apply { PipelineOptionsFactory.register(optionClass) }
 
         return PipelineOptionsFactory.fromArgs(*args)
