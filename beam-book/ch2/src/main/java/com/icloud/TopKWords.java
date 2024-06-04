@@ -1,7 +1,7 @@
 package com.icloud;
 
+import com.icloud.watermark.policy.PreventIdleWatermarkPolicy;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.kafka.CustomTimestampPolicyWithLimitedDelay;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -14,7 +14,6 @@ import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.TypeDescriptors;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -23,6 +22,8 @@ import org.joda.time.Instant;
 
 import java.io.Serializable;
 import java.util.Comparator;
+
+import static org.apache.beam.sdk.values.TypeDescriptors.strings;
 
 public class TopKWords {
     public interface TopKWordsOptions
@@ -74,11 +75,15 @@ public class TopKWords {
                                         .withKeyDeserializer(StringDeserializer.class)
                                         .withValueDeserializer(StringDeserializer.class)
                                         .withTopic(options.getInputTopic())
-                                        .withLogAppendTime()
+                                        .withTimestampPolicyFactory((tp, previousWatermark) ->
+                                                PreventIdleWatermarkPolicy.of(e -> Instant.now(),
+                                                        Duration.standardSeconds(1),
+                                                        previousWatermark,
+                                                        true
+                                                ))
                                         .withoutMetadata()
                         )
-                        .apply(MapElements.into(TypeDescriptors.strings()).via(KV::getValue));
-
+                        .apply(MapElements.into(strings()).via(KV::getValue));
         final PCollection<KV<String, Long>> output =
                 countWordsInFixedWindows(
                         lines,
