@@ -1,10 +1,10 @@
 package com.icloud;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.icloud.watermark.policy.PreventIdleWatermarkPolicy;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.Flatten;
@@ -26,33 +26,15 @@ import java.util.Comparator;
 import static org.apache.beam.sdk.values.TypeDescriptors.strings;
 
 public class TopKWords {
+
     public interface TopKWordsOptions
-            extends PipelineOptions {
+            extends CommonKafkaOptions {
 
         @Validation.Required
         @Description("length of the window ::: UNIT = SECOND")
         Integer getWindowLength();
 
         void setWindowLength(Integer value);
-
-
-        @Validation.Required
-        @Description("Bootstrap server for using kafka topic")
-        String getBootstrapServer();
-
-        void setBootstrapServer(String value);
-
-        @Validation.Required
-        @Description("name of topic for input data")
-        String getInputTopic();
-
-        void setInputTopic(String value);
-
-        @Validation.Required
-        @Description("name of topic for output data")
-        String getOutputTopic();
-
-        void setOutputTopic(String value);
 
         @Validation.Required
         @Description("k value for Top K")
@@ -87,8 +69,7 @@ public class TopKWords {
         final PCollection<KV<String, Long>> output =
                 countWordsInFixedWindows(
                         lines,
-                        options.getK(),
-                        Duration.standardSeconds(options.getWindowLength())
+                        Duration.standardSeconds(options.getWindowLength()), options.getK()
                 );
 
 
@@ -99,13 +80,14 @@ public class TopKWords {
                         .withValueSerializer(LongSerializer.class)
                         .withTopic(options.getOutputTopic())
         );
+
         pipeline.run();
     }
 
-    private static PCollection<KV<String, Long>> countWordsInFixedWindows(
+    @VisibleForTesting
+    static PCollection<KV<String, Long>> countWordsInFixedWindows(
             PCollection<String> lines,
-            Integer k,
-            Duration size
+            Duration size, Integer k
     ) {
         return lines.apply(Window.into(FixedWindows.of(size)))
                 .apply(Tokenize.of())
