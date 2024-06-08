@@ -1,0 +1,3 @@
+for beam side input pattern
+
+you can edit this file to test

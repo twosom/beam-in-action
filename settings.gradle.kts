@@ -25,6 +25,7 @@ listOf(
     "timer-do-fn",
     "custom-windows",
     "test-stream",
+    "side-input-pattern",
 ).forEach { include(it) }
 
 

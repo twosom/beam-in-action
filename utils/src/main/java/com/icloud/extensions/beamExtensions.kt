@@ -6,9 +6,13 @@ import org.apache.beam.sdk.state.State
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.ParDo
 import org.apache.beam.sdk.transforms.View
+import org.apache.beam.sdk.transforms.windowing.Repeatedly
+import org.apache.beam.sdk.transforms.windowing.Trigger
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
 import org.apache.beam.sdk.values.PCollectionView
+import org.apache.beam.sdk.values.TimestampedValue
+import org.joda.time.Instant
 
 /**
  * infix method for create KV
@@ -57,3 +61,13 @@ fun <T> PCollection<T>.singleton(): PCollectionView<T> =
 fun State.clear(afterClearMessage: String) {
     this.clear().apply { println(afterClearMessage) }
 }
+
+/**
+ * Add Repeatedly trigger
+ */
+fun Trigger.repeatedlyForever() =
+    Repeatedly.forever(this)
+
+infix fun <T> T.tv(instant: Instant): TimestampedValue<T> =
+    TimestampedValue.of(this, instant)
+
