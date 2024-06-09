@@ -4,6 +4,7 @@ import com.icloud.extensions.kv
 import com.icloud.extensions.parDo
 import com.icloud.extensions.repeatedlyForever
 import com.icloud.service.PlaceholderExternalService
+import com.icloud.types.JavaMap
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.io.GenerateSequence
 import org.apache.beam.sdk.options.PipelineOptions
@@ -22,6 +23,7 @@ import org.joda.time.Instant
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
 
 object SlowlyUpdatingGlobalWindowSideInput {
 
@@ -64,28 +66,29 @@ object SlowlyUpdatingGlobalWindowSideInput {
         pipeline.run()
     }
 
-    private fun getSideInput(pipeline: Pipeline): PCollectionView<MutableIterable<Map<String, String>>> =
+    private fun getSideInput(pipeline: Pipeline): PCollectionView<MutableIterable<JavaMap<String, String>>> =
         pipeline.apply(
             "From Generated Sequence 1",
             GenerateSequence.from(0).withRate(1, Duration.standardSeconds(5L))
         )
             .apply(
                 "Convert To PlaceHolder",
-                object : DoFn<Long, Map<String, String>>() {
+                object : DoFn<Long, JavaMap<String, String>>() {
 
                     @ProcessElement
                     fun process(
                         @Timestamp timestamp: Instant,
-                        output: OutputReceiver<Map<String, String>>,
+                        output: OutputReceiver<JavaMap<String, String>>,
                     ) = run {
                         val result = PlaceholderExternalService.readTestData(timestamp)
-                        output.output(result as Map<String, String>)
+                        @Suppress("UNCHECKED_CAST")
+                        output.output(result as? JavaMap<String, String>)
                     }
                 }.parDo()
             )
             .apply(
                 "Global Windowing And Triggering",
-                Window.into<Map<String, String>>(GlobalWindows())
+                Window.into<JavaMap<String, String>>(GlobalWindows())
                     .triggering(
                         AfterProcessingTime.pastFirstElementInPane()
                             .repeatedlyForever()
