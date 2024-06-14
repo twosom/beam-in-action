@@ -73,6 +73,7 @@ public class MaxWordLength {
                                 )
                                 .withAllowedLateness(Duration.ZERO)
                                 .withTimestampCombiner(TimestampCombiner.LATEST)
+                                .withOnTimeBehavior(Window.OnTimeBehavior.FIRE_IF_NON_EMPTY)
                                 .accumulatingFiredPanes()
                 )
                 .apply(Max.globally(

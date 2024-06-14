@@ -3,9 +3,7 @@ package com.icloud.extensions
 import com.google.api.services.bigquery.model.TableFieldSchema
 import com.google.api.services.bigquery.model.TableRow
 import org.apache.beam.sdk.state.State
-import org.apache.beam.sdk.transforms.DoFn
-import org.apache.beam.sdk.transforms.ParDo
-import org.apache.beam.sdk.transforms.View
+import org.apache.beam.sdk.transforms.*
 import org.apache.beam.sdk.transforms.windowing.Repeatedly
 import org.apache.beam.sdk.transforms.windowing.Trigger
 import org.apache.beam.sdk.values.KV
@@ -71,3 +69,27 @@ fun Trigger.repeatedlyForever() =
 infix fun <T> T.tv(instant: Instant): TimestampedValue<T> =
     TimestampedValue.of(this, instant)
 
+/**
+ * An inline extension function for FlatMapElements that takes a lambda function as a parameter.
+ * The function transforms an input of type InputT to an Iterable of type OutputT.
+ *
+ * @param fn A lambda function to transform input to an Iterable of output elements.
+ * @return A FlatMapElements instance with the applied transformation.
+ */
+inline fun <InputT, OutputT> FlatMapElements<*, OutputT>.kVia(
+    crossinline fn: (InputT) -> Iterable<OutputT>,
+): FlatMapElements<InputT, OutputT> =
+    ProcessFunction<InputT, Iterable<OutputT>> { fn(it) }.let { this.via(it) }
+
+/**
+ * An inline extension function for MapElements that takes a lambda function as a parameter.
+ * The function transforms an input of type InputT to an output of type OutputT.
+ *
+ * @param fn A lambda function to transform the input to an output element.
+ * @return A MapElements instance with the applied transformation.
+ */
+inline fun <InputT, OutputT> MapElements<*, OutputT>.kVia(
+    crossinline fn: (InputT) -> OutputT,
+): MapElements<InputT, OutputT> =
+    ProcessFunction<InputT, OutputT> { fn(it) }
+        .let { this.via(it) }

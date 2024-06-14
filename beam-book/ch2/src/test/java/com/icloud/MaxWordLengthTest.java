@@ -48,13 +48,12 @@ public class MaxWordLengthTest {
                         "1970-01-01T00:00:00.000Z:a",
                         "1970-01-01T00:00:10.000Z:bb",
                         "1970-01-01T00:00:20.000Z:ccc",
-                        "1970-01-01T00:00:30.000Z:ccc",
-                        "294247-01-09T04:00:54.775Z:ccc" /*End Of the Global Window*/
+                        "1970-01-01T00:00:30.000Z:ccc"
                 );
 
         PAssert.that(output)
                 .inFinalPane(GlobalWindow.INSTANCE)
-                .containsInAnyOrder("294247-01-09T04:00:54.775Z:ccc");
+                .empty();
 
         p.run();
     }
