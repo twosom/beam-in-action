@@ -15,18 +15,20 @@ plugins {
 
 val beamVersion: String = "2.56.0"
 
-group = "com.icloud"
-version = "1.0-SNAPSHOT"
-
-subprojects {
+allprojects {
     group = "com.icloud"
     version = "1.0-SNAPSHOT"
 
     plugins.apply {
         apply("java")
         apply("application")
-        apply("com.github.johnrengelman.shadow")
         apply("org.jetbrains.kotlin.jvm")
+        apply("com.github.johnrengelman.shadow")
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     repositories {
@@ -41,6 +43,7 @@ subprojects {
             url = uri("https://packages.confluent.io/maven/")
         }
     }
+
     dependencies {
         // kotlin
         implementation(kotlin("stdlib-jdk8"))
@@ -98,13 +101,7 @@ subprojects {
             implementation(project(":utils"))
         }
     }
-}
 
-allprojects {
-    java {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
 
     tasks {
         test {
@@ -113,14 +110,14 @@ allprojects {
         compileJava {
             options.compilerArgs.add("-parameters")
         }
-        kotlin {
-            jvmToolchain(8)
+        withType<ShadowJar> {
+            isZip64 = true
+            mergeServiceFiles()
         }
     }
 
-    tasks.withType<ShadowJar> {
-        isZip64 = true
-        mergeServiceFiles()
+    kotlin {
+        jvmToolchain(8)
     }
 }
 

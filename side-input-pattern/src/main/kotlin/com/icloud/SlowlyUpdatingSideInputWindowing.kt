@@ -5,7 +5,10 @@ import com.icloud.extensions.parDo
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.io.FileIO
 import org.apache.beam.sdk.io.TextIO
+import org.apache.beam.sdk.options.Default
+import org.apache.beam.sdk.options.Description
 import org.apache.beam.sdk.options.PipelineOptions
+import org.apache.beam.sdk.options.Validation.Required
 import org.apache.beam.sdk.transforms.Count
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.PeriodicImpulse
@@ -15,11 +18,38 @@ import org.joda.time.Duration
 import org.joda.time.Instant
 
 object SlowlyUpdatingSideInputWindowing {
+
+    interface Options
+        : PipelineOptions {
+
+        @get:Description(
+            """
+                The input file path for create side input.
+                This file will be read periodic.
+            """
+        )
+        @get:Required
+        var filePath: String
+
+        @get:Description(
+            """
+                The interval value for lookup new files.
+            """
+        )
+        @get:Default.Long(10L)
+        var lookupInterval: Long
+
+    }
+
     @JvmStatic
     fun main(args: Array<String>) {
-        val pipeline = PipelineUtils.create<PipelineOptions>(args)
+        val pipeline = PipelineUtils.createWithHdfsConf("hdfs://node01.ming.com:8020", args, Options::class.java)
+        val options = pipeline.options.`as`(Options::class.java)
 
-        val sideInput = getSideInput(pipeline)
+        val sideInput = pipeline.getSideInput(
+            options.filePath,
+            options.lookupInterval
+        )
 
         val mainInput = pipeline.apply(
             "Main Input Impulse",
@@ -46,10 +76,13 @@ object SlowlyUpdatingSideInputWindowing {
         pipeline.run()
     }
 
-    private fun getSideInput(pipeline: Pipeline) = pipeline.apply(
+    private fun Pipeline.getSideInput(
+        filePath: String,
+        lookupInterval: Long,
+    ) = apply(
         "Side Input Impulse",
         PeriodicImpulse.create()
-            .withInterval(Duration.standardSeconds(5L))
+            .withInterval(Duration.standardSeconds(lookupInterval))
             .applyWindowing()
     )
         .apply(
@@ -59,7 +92,7 @@ object SlowlyUpdatingSideInputWindowing {
                 fun process(
                     output: OutputReceiver<String>,
                 ) = run {
-                    output.output("test.txt")
+                    output.output(filePath)
                 }
             }.parDo()
         )
