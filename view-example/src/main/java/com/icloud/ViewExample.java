@@ -1,10 +1,7 @@
 package com.icloud;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
@@ -22,7 +19,8 @@ public class ViewExample {
                         KV.of("London", "United Kingdom"),
                         KV.of("San Francisco", "United States"),
                         KV.of("Singapore", "Singapore"),
-                        KV.of("Sydney", "Australia")
+                        KV.of("Sydney", "Australia"),
+                        KV.of("London", "UK")
                 )
         );
 
@@ -39,24 +37,25 @@ public class ViewExample {
 
 
         final PCollectionView<Map<String, String>> citiesToCountriesView =
-                citiesToCountries.apply(View.asMap());
+                citiesToCountries
+                        .apply(Latest.perKey())
+                        .apply(View.asMap());
 
         final PCollection<KV<String, String>> output = persons.apply(
                 ParDo.of(new DoFn<KV<String, String>, KV<String, String>>() {
                     @ProcessElement
                     public void process(
                             @Element KV<String, String> person,
-                            ProcessContext c,
+                            @SideInput("cities-countries") Map<String, String> citiesToCountries,
                             OutputReceiver<KV<String, String>> outputs
                     ) {
-                        final Map<String, String> citiesToCountries =
-                                c.sideInput(citiesToCountriesView);
-
                         final String city = person.getValue();
                         final String country = citiesToCountries.getOrDefault(city, "Unknown");
                         outputs.output(KV.of(person.getKey(), country));
                     }
-                }).withSideInputs(citiesToCountriesView)
+                }).withSideInputs(
+                        Map.of("cities-countries", citiesToCountriesView)
+                )
         );
 
         output.apply(LogUtils.of());

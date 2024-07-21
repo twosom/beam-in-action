@@ -4,7 +4,8 @@ apply {
     from("gradle/beam.gradle")
 }
 
-setProperty("mainClassName", "none")
+val mainClassName: String? by project.properties
+if (mainClassName == null) setProperty("mainClassName", "none")
 
 plugins {
     java
@@ -13,7 +14,7 @@ plugins {
     kotlin("jvm")
 }
 
-val beamVersion: String = "2.56.0"
+val beamVersion: String = "2.57.0"
 
 allprojects {
     group = "com.icloud"
@@ -27,11 +28,12 @@ allprojects {
     }
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     repositories {
+        mavenLocal()
         mavenCentral()
         maven {
             url = uri("https://repository.apache.org/content/repositories/snapshots/")
@@ -73,6 +75,7 @@ allprojects {
             "beam-sdks-java-io-hadoop-file-system",
             "beam-sdks-java-extensions-join-library",
             "beam-sdks-java-extensions-json-jackson",
+            "beam-sdks-java-io-amazon-web-services2"
         )
         implementation("org.apache.kafka:kafka-clients:3.4.0")
 
@@ -83,6 +86,8 @@ allprojects {
 
         // logger
         implementation("org.slf4j:slf4j-jdk14:1.7.32")
+        implementation("ch.qos.logback:logback-classic:1.3.1")
+
         // lombok
         compileOnly("org.projectlombok:lombok:1.18.20")
         annotationProcessor("org.projectlombok:lombok:1.18.20")
@@ -96,6 +101,7 @@ allprojects {
         testImplementation("org.mockito:mockito-core:2.1.0")
         testImplementation("org.junit.vintage:junit-vintage-engine")
         testImplementation("junit:junit:4.13.2")
+
 
         if (project.name != "utils") {
             implementation(project(":utils"))
@@ -114,10 +120,23 @@ allprojects {
             isZip64 = true
             mergeServiceFiles()
         }
+        build {
+            println(
+                """
+                    ######################################
+                    ############ BUILD START #############
+                    ######################################
+                """.trimIndent()
+            )
+
+            println("Main Class Name = $mainClassName")
+            application.mainClass.set(mainClassName)
+        }
+
     }
 
     kotlin {
-        jvmToolchain(8)
+        jvmToolchain(11)
     }
 }
 

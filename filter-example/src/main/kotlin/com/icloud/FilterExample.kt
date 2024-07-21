@@ -114,7 +114,7 @@ object FilterExample {
                 rows.apply(ExtractTempFn().parDo())
 
             val globalMeanTemp =
-                meanTemps.apply(Mean.globally()).singleton()
+                meanTemps.apply(Mean.globally()).singletonView()
 
             val monthFilteredRows =
                 rows.apply(FilterSingleMonthDateFn(this.monthFilter).parDo())

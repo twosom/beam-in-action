@@ -2,15 +2,23 @@ package com.icloud.extensions
 
 import com.google.api.services.bigquery.model.TableFieldSchema
 import com.google.api.services.bigquery.model.TableRow
+import org.apache.beam.sdk.coders.Coder
+import org.apache.beam.sdk.coders.KvCoder
+import org.apache.beam.sdk.io.kafka.TimestampPolicy
+import org.apache.beam.sdk.io.kafka.TimestampPolicyFactory
 import org.apache.beam.sdk.state.State
 import org.apache.beam.sdk.transforms.*
+import org.apache.beam.sdk.transforms.windowing.BoundedWindow
 import org.apache.beam.sdk.transforms.windowing.Repeatedly
 import org.apache.beam.sdk.transforms.windowing.Trigger
-import org.apache.beam.sdk.values.KV
-import org.apache.beam.sdk.values.PCollection
-import org.apache.beam.sdk.values.PCollectionView
-import org.apache.beam.sdk.values.TimestampedValue
+import org.apache.beam.sdk.values.*
+import org.apache.kafka.common.TopicPartition
+import org.joda.time.Duration
 import org.joda.time.Instant
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.util.*
+import kotlin.reflect.KClass
 
 /**
  * infix method for create KV
@@ -49,7 +57,7 @@ fun <InputT, OutputT, FnT : DoFn<InputT, OutputT>> FnT.parDo():
 /**
  * create singleton view
  */
-fun <T> PCollection<T>.singleton(): PCollectionView<T> =
+fun <InputT> PCollection<InputT>.singletonView(): PCollectionView<InputT> =
     this.apply(View.asSingleton())
 
 /**
@@ -63,7 +71,7 @@ fun State.clear(afterClearMessage: String) {
 /**
  * Add Repeatedly trigger
  */
-fun Trigger.repeatedlyForever() =
+fun <TriggerT : Trigger> TriggerT.repeatedlyForever(): Repeatedly =
     Repeatedly.forever(this)
 
 infix fun <T> T.tv(instant: Instant): TimestampedValue<T> =
@@ -91,5 +99,87 @@ inline fun <InputT, OutputT> FlatMapElements<*, OutputT>.kVia(
 inline fun <InputT, OutputT> MapElements<*, OutputT>.kVia(
     crossinline fn: (InputT) -> OutputT,
 ): MapElements<InputT, OutputT> =
-    ProcessFunction<InputT, OutputT> { fn(it) }
-        .let { this.via(it) }
+    ProcessFunction<InputT, OutputT> { fn(it) }.let { this.via(it) }
+
+infix fun <KeyT, ValueT> TypeDescriptor<KeyT>.kvs(
+    valueTypeDescriptor: TypeDescriptor<ValueT>,
+): TypeDescriptor<KV<KeyT, ValueT>> = TypeDescriptors.kvs(this, valueTypeDescriptor)
+
+/**
+ * for kotlin
+ */
+abstract class KTimestampPolicyFactory<KeyT, ValueT> :
+    TimestampPolicyFactory<KeyT, ValueT> {
+
+    abstract fun createTimestampPolicy(
+        tp: TopicPartition,
+        previousWatermark: Instant?,
+    ): TimestampPolicy<KeyT, ValueT>
+
+    //DO NOT USE THIS
+    override fun createTimestampPolicy(
+        tp: TopicPartition,
+        previousWatermark: Optional<Instant>,
+    ): TimestampPolicy<KeyT, ValueT> =
+        createTimestampPolicy(tp, previousWatermark.orElse(null))
+}
+
+
+/**
+ * kotlin nullable value to java optional value
+ */
+fun <T> T?.optional() =
+    Optional.ofNullable(this)
+
+
+fun <T : Number> T.seconds(): Duration =
+    Duration.standardSeconds(this.toLong())
+
+fun <T : Number> T.minutes(): Duration =
+    Duration.standardMinutes(this.toLong())
+
+fun <T : Number> T.hours(): Duration =
+    Duration.standardHours(this.toLong())
+
+/**
+ * Beam Type Descriptor sugar method
+ */
+fun <ClassT : Any> KClass<ClassT>.typeDescriptor(): TypeDescriptor<ClassT> =
+    TypeDescriptor.of(this.java)
+
+fun <T> T.timestampedValue(timestamp: Instant): TimestampedValue<T> =
+    TimestampedValue.of(this, timestamp)
+
+
+val <InputT> PCollection<InputT>.typeWindowingStrategy: WindowingStrategy<InputT, BoundedWindow>
+    @Suppress("UNCHECKED_CAST")
+    get() = this.windowingStrategy as WindowingStrategy<InputT, BoundedWindow>
+
+/**
+ * create KVCoder<KeyT, ValueT>
+ */
+infix fun <KeyT, ValueT> Coder<KeyT>.kvc(valueCoder: Coder<ValueT>): KvCoder<KeyT, ValueT> =
+    KvCoder.of(this, valueCoder)
+
+operator fun <KeyT, ValueT> KV<KeyT, ValueT>.component1(): KeyT = this.key
+
+operator fun <KeyT, ValueT> KV<KeyT, ValueT>.component2(): ValueT = this.value
+
+
+typealias KPredicate<InputT> = (InputT) -> Boolean
+
+/**
+ * [Filter] class for kotlin language
+ */
+object KFilter {
+
+    /**
+     * @see Filter.by
+     */
+    inline fun <InputT> by(
+        crossinline fn: KPredicate<InputT>,
+    ): Filter<InputT> =
+        Filter.by(ProcessFunction { fn(it) })
+}
+
+fun <ClassT : Any> KClass<ClassT>.logger(): Logger = LoggerFactory.getLogger(this.java)

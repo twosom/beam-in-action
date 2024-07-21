@@ -34,11 +34,11 @@ allprojects {
             actions.clear()
             return null
         }
-
+        println("Use Flink Version ::: 1.17")
         dependencies {
-            println("Use Flink Version ::: 1.17")
             runtimeOnly("org.apache.beam:beam-runners-flink-1.17")
         }
+
         application.mainClass.set(mainClassName)
         classpath = files(tasks.shadowJar)
         mainClass.set(mainClassName)
@@ -51,8 +51,34 @@ allprojects {
                 "--parallelism=${parallelism}"
         ]
         if (project.hasProperty("args")) {
-            def _args = project.property("args").split(" ")
-            defaultArgs.addAll(_args)
+            Collection<String> customArgs = project.property("args").split(" ")
+
+            /**
+             * if stateBackend option is rocksdb
+             * then input RocksDB dependency
+             */
+            customArgs.stream().filter { String arg -> arg.startsWith "--stateBackend=" }
+                    .findFirst()
+                    .ifPresent {
+                        def (_, value) = it.split("=")
+                        if (value == "rocksdb") {
+                            println("Use RocksDB ::: 1.17.2")
+                            dependencies {
+                                runtimeOnly("org.apache.flink:flink-statebackend-rocksdb:1.17.2")
+                            }
+                        }
+                    }
+
+            /**
+             * if stateBackendStoragePath not specified
+             * use default one
+             */
+            if (customArgs.stream().noneMatch { String arg -> arg.startsWith "--stateBackendStoragePath=" }) {
+                println("Argument [stateBackendStoragePath] not specified\nUse default State Backend Storage Path")
+                customArgs += "--stateBackendStoragePath=$DEFAULT_STATE_BACKEND_STORAGE_PATH"
+            }
+
+            defaultArgs.addAll(customArgs)
         }
 
         println(defaultArgs)
