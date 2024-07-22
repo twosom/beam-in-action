@@ -192,7 +192,7 @@ object RpcParDoStateful {
             // - 만약 아직 없으면 0으로 대체
             var currentSize = batchSizeState.read() ?: 0
 
-            val value = ValueWithTimestamp(input.value, timestamp)
+            val value = ValueWithTimestamp.of(input.value, timestamp)
 
             //TODO
             // 만약 [@ProcessElement] 에서 버퍼 임계점에 도달하면
@@ -320,7 +320,14 @@ object RpcParDoStateful {
     data class ValueWithTimestamp<T>(
         val value: T,
         val timestamp: Instant,
-    )
+    ) {
+        companion object {
+            fun <T> of(
+                value: T,
+                timestamp: Instant,
+            ): ValueWithTimestamp<T> = ValueWithTimestamp(value, timestamp)
+        }
+    }
 
     class ValueWithTimestampCoder<T>(
         private val valueCoder: Coder<T>,

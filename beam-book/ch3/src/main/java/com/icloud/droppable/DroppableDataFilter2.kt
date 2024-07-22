@@ -37,22 +37,17 @@ object DroppableDataFilter2 : AbstractDroppableDataFilter() {
             )
 
         val outputs = splitDroppable(input)
-        outputs.all
-            .forEach { (_, pCollection: PCollection<*>) ->
-                @Suppress("UNCHECKED_CAST")
-                (pCollection as PCollection<String>)
-                    .apply(LogUtils.of())
-            }
-//        storeResult(
-//            result = outputs.get(mainOutput),
-//            bootstrapServer = options.bootstrapServer,
-//            topic = options.outputTopic
-//        )
-//        storeResult(
-//            result = outputs.get(droppableOutput),
-//            bootstrapServer = options.bootstrapServer,
-//            topic = options.outputTopicDroppable
-//        )
+
+        storeResult(
+            result = outputs.get(mainOutput),
+            bootstrapServer = options.bootstrapServer,
+            topic = options.outputTopic
+        )
+        storeResult(
+            result = outputs.get(droppableOutput),
+            bootstrapServer = options.bootstrapServer,
+            topic = options.outputTopicDroppable
+        )
 
         pipeline.run().waitUntilFinish()
     }
@@ -99,7 +94,8 @@ object DroppableDataFilter2 : AbstractDroppableDataFilter() {
         val inputWatermarkOnly =
             input.apply(
                 "InputWatermark_GlobalWindowing",
-                Window.into(GlobalWindows()))
+                Window.into(GlobalWindows())
+            )
                 .apply(KFilter.by { _ -> false })
 
         //TODO
