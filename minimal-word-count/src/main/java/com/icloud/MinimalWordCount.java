@@ -1,5 +1,6 @@
 package com.icloud;
 
+import java.util.Arrays;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.Count;
@@ -8,8 +9,6 @@ import org.apache.beam.sdk.transforms.FlatMapElements;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptors;
-
-import java.util.Arrays;
 
 public class MinimalWordCount {
   public static void main(String[] args) {

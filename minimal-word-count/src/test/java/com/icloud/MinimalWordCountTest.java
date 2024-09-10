@@ -29,42 +29,39 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class MinimalWordCountTest {
 
-    @Rule
-    public TestPipeline p = TestPipeline.create().enableAbandonedNodeEnforcement(false);
+  @Rule public TestPipeline p = TestPipeline.create().enableAbandonedNodeEnforcement(false);
 
-    @Test
-    public void testMinimalWordCount() throws IOException {
-        p.getOptions().as(GcsOptions.class).setGcsUtil(this.buildMockGcsUtil());
+  @Test
+  public void testMinimalWordCount() throws IOException {
+    p.getOptions().as(GcsOptions.class).setGcsUtil(this.buildMockGcsUtil());
 
-        p.apply(TextIO.read().from("gs://apache-beam-samples/shakespeare/*"))
-                .apply(FlatMapElements.into(strings())
-                        .via(word -> Arrays.asList(word.split("[^a-zA-Z']+"))))
-                .apply(Filter.by(word -> !word.isEmpty()))
-                .apply(Count.perElement())
-                .apply(MapElements.into(strings())
-                        .via((KV<String, Long> wordCount) ->
-                                wordCount.getKey() + ": " + wordCount.getValue()
-                        )
-                )
-                .apply(TextIO.write().to("gs://your-output-bucket/and-output-prefix"))
-        ;
-    }
+    p.apply(TextIO.read().from("gs://apache-beam-samples/shakespeare/*"))
+        .apply(
+            FlatMapElements.into(strings()).via(word -> Arrays.asList(word.split("[^a-zA-Z']+"))))
+        .apply(Filter.by(word -> !word.isEmpty()))
+        .apply(Count.perElement())
+        .apply(
+            MapElements.into(strings())
+                .via(
+                    (KV<String, Long> wordCount) ->
+                        wordCount.getKey() + ": " + wordCount.getValue()))
+        .apply(TextIO.write().to("gs://your-output-bucket/and-output-prefix"));
+  }
 
-    private GcsUtil buildMockGcsUtil() throws IOException {
-        final GcsUtil mockGcsUtil = mock(GcsUtil.class);
+  private GcsUtil buildMockGcsUtil() throws IOException {
+    final GcsUtil mockGcsUtil = mock(GcsUtil.class);
 
-        when(mockGcsUtil.open(any(GcsPath.class)))
-                .then(invocation ->
-                        FileChannel.open(
-                                Files.createTempFile("channel-", ".tmp"),
-                                StandardOpenOption.CREATE,
-                                StandardOpenOption.DELETE_ON_CLOSE
-                        )
-                );
+    when(mockGcsUtil.open(any(GcsPath.class)))
+        .then(
+            invocation ->
+                FileChannel.open(
+                    Files.createTempFile("channel-", ".tmp"),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.DELETE_ON_CLOSE));
 
-        when(mockGcsUtil.expand(any(GcsPath.class)))
-                .then(invocation -> ImmutableList.of((GcsPath) invocation.getArguments()[0]));
+    when(mockGcsUtil.expand(any(GcsPath.class)))
+        .then(invocation -> ImmutableList.of((GcsPath) invocation.getArguments()[0]));
 
-        return mockGcsUtil;
-    }
+    return mockGcsUtil;
+  }
 }

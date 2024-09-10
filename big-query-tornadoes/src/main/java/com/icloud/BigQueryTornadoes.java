@@ -19,85 +19,75 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class BigQueryTornadoes {
 
-    private static final String WEATHER_SAMPLES_TABLE =
-            "apache-beam-testing.samples.weather_stations";
+  private static final String WEATHER_SAMPLES_TABLE =
+      "apache-beam-testing.samples.weather_stations";
 
-    public static void main(String[] args) {
-        final Pipeline pipeline = PipelineUtils.create(args, Options.class);
-        final Options options = pipeline.getOptions().as(Options.class);
+  public static void main(String[] args) {
+    final Pipeline pipeline = PipelineUtils.create(args, Options.class);
+    final Options options = pipeline.getOptions().as(Options.class);
 
-        final PCollection<TableRow> input = pipeline.apply("ReadFromBigQuery",
-                BigQueryIO.readTableRows()
-                        .from(options.getInput())
-                        .withMethod(options.getReadMethod())
-        );
+    final PCollection<TableRow> input =
+        pipeline.apply(
+            "ReadFromBigQuery",
+            BigQueryIO.readTableRows()
+                .from(options.getInput())
+                .withMethod(options.getReadMethod()));
 
-        input.apply(new CountTornadoes())
-                .apply(LogUtils.of());
+    input.apply(new CountTornadoes()).apply(LogUtils.of());
 
-        pipeline.run().waitUntilFinish();
+    pipeline.run().waitUntilFinish();
+  }
+
+  public interface Options extends PipelineOptions {
+    @Description("Table to read from, specified as <project_id>:<dataset_id>.<table_id>")
+    @Default.String(WEATHER_SAMPLES_TABLE)
+    String getInput();
+
+    void setInput(String value);
+
+    @Description("SQL Query to read from, will be used if Input is not set.")
+    @Default.String("")
+    String getInputQuery();
+
+    void setInputQuery(String value);
+
+    @Description("Read method to use to read from BigQuery")
+    @Default.Enum("DIRECT_READ")
+    TypedRead.Method getReadMethod();
+
+    void setReadMethod(TypedRead.Method value);
+  }
+
+  static class CountTornadoes
+      extends PTransform<@NonNull PCollection<TableRow>, @NonNull PCollection<TableRow>> {
+
+    @Override
+    public PCollection<TableRow> expand(PCollection<TableRow> input) {
+      return input
+          .apply(ParDo.of(new ExtractTornadoesFn()))
+          .apply(Count.perElement())
+          .apply(ParDo.of(new FormatCountsFn()));
     }
+  }
 
-    public interface Options
-            extends PipelineOptions {
-        @Description("Table to read from, specified as <project_id>:<dataset_id>.<table_id>")
-        @Default.String(WEATHER_SAMPLES_TABLE)
-        String getInput();
-
-        void setInput(String value);
-
-        @Description("SQL Query to read from, will be used if Input is not set.")
-        @Default.String("")
-        String getInputQuery();
-
-        void setInputQuery(String value);
-
-        @Description("Read method to use to read from BigQuery")
-        @Default.Enum("DIRECT_READ")
-        TypedRead.Method getReadMethod();
-
-        void setReadMethod(TypedRead.Method value);
+  @VisibleForTesting
+  static class ExtractTornadoesFn extends DoFn<TableRow, Integer> {
+    @ProcessElement
+    public void process(@Element TableRow element, OutputReceiver<Integer> output) {
+      if ((Boolean) element.get("tornado")) {
+        output.output(Integer.parseInt((String) element.get("month")));
+      }
     }
+  }
 
-    static class CountTornadoes
-            extends PTransform<@NonNull PCollection<TableRow>, @NonNull PCollection<TableRow>> {
+  @VisibleForTesting
+  static class FormatCountsFn extends DoFn<KV<Integer, Long>, TableRow> {
+    @ProcessElement
+    public void process(@Element KV<Integer, Long> element, OutputReceiver<TableRow> output) {
+      final TableRow row =
+          new TableRow().set("month", element.getKey()).set("tornado_count", element.getValue());
 
-        @Override
-        public PCollection<TableRow> expand(PCollection<TableRow> input) {
-            return input.apply(ParDo.of(new ExtractTornadoesFn()))
-                    .apply(Count.perElement())
-                    .apply(ParDo.of(new FormatCountsFn()));
-        }
+      output.output(row);
     }
-
-    @VisibleForTesting
-    static class ExtractTornadoesFn
-            extends DoFn<TableRow, Integer> {
-        @ProcessElement
-        public void process(
-                @Element TableRow element,
-                OutputReceiver<Integer> output
-        ) {
-            if ((Boolean) element.get("tornado")) {
-                output.output(Integer.parseInt((String) element.get("month")));
-            }
-        }
-    }
-
-
-    @VisibleForTesting
-    static class FormatCountsFn
-            extends DoFn<KV<Integer, Long>, TableRow> {
-        @ProcessElement
-        public void process(
-                @Element KV<Integer, Long> element,
-                OutputReceiver<TableRow> output
-        ) {
-            final TableRow row = new TableRow()
-                    .set("month", element.getKey())
-                    .set("tornado_count", element.getValue());
-
-            output.output(row);
-        }
-    }
+  }
 }

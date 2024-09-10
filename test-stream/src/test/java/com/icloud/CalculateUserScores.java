@@ -15,26 +15,27 @@ import org.joda.time.Duration;
 
 @VisibleForTesting
 public class CalculateUserScores
-        extends PTransform<@NonNull PCollection<GameActionInfo>, @NonNull PCollection<KV<String, Integer>>> {
-    private final Duration allowedLateness;
+    extends PTransform<
+        @NonNull PCollection<GameActionInfo>, @NonNull PCollection<KV<String, Integer>>> {
+  private final Duration allowedLateness;
 
-    CalculateUserScores(Duration allowedLateness) {
-        this.allowedLateness = allowedLateness;
-    }
+  CalculateUserScores(Duration allowedLateness) {
+    this.allowedLateness = allowedLateness;
+  }
 
-    @Override
-    public PCollection<KV<String, Integer>> expand(PCollection<GameActionInfo> input) {
-        return input
-                .apply(
-                        "LeaderboardUserGlobalWindow",
-                        Window.<GameActionInfo>into(new GlobalWindows())
-                                // Get periodic results every ten minutes.
-                                .triggering(
-                                        Repeatedly.forever(
-                                                AfterProcessingTime.pastFirstElementInPane().plusDelayOf(TEN_MINUTES)))
-                                .accumulatingFiredPanes()
-                                .withAllowedLateness(allowedLateness))
-                // Extract and sum username/score pairs from the event data.
-                .apply("ExtractUserScore", new ExtractAndSumScore("user"));
-    }
+  @Override
+  public PCollection<KV<String, Integer>> expand(PCollection<GameActionInfo> input) {
+    return input
+        .apply(
+            "LeaderboardUserGlobalWindow",
+            Window.<GameActionInfo>into(new GlobalWindows())
+                // Get periodic results every ten minutes.
+                .triggering(
+                    Repeatedly.forever(
+                        AfterProcessingTime.pastFirstElementInPane().plusDelayOf(TEN_MINUTES)))
+                .accumulatingFiredPanes()
+                .withAllowedLateness(allowedLateness))
+        // Extract and sum username/score pairs from the event data.
+        .apply("ExtractUserScore", new ExtractAndSumScore("user"));
+  }
 }

@@ -10,21 +10,22 @@ import org.apache.beam.sdk.values.PCollection;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class ExtractAndSumScore
-        extends PTransform<@NonNull PCollection<GameActionInfo>, @NonNull PCollection<KV<String, Integer>>> {
+    extends PTransform<
+        @NonNull PCollection<GameActionInfo>, @NonNull PCollection<KV<String, Integer>>> {
 
-    private final String field;
+  private final String field;
 
-    ExtractAndSumScore(String field) {
-        this.field = field;
-    }
+  ExtractAndSumScore(String field) {
+    this.field = field;
+  }
 
-    @Override
-    public PCollection<KV<String, Integer>> expand(PCollection<GameActionInfo> gameInfo) {
+  @Override
+  public PCollection<KV<String, Integer>> expand(PCollection<GameActionInfo> gameInfo) {
 
-        return gameInfo
-                .apply(
-                        MapElements.into(kvs(strings(), integers()))
-                                .via(gInfo -> KV.of(gInfo.getKey(field), gInfo.getScore())))
-                .apply(Sum.integersPerKey());
-    }
+    return gameInfo
+        .apply(
+            MapElements.into(kvs(strings(), integers()))
+                .via(gInfo -> KV.of(gInfo.getKey(field), gInfo.getScore())))
+        .apply(Sum.integersPerKey());
+  }
 }

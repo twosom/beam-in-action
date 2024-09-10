@@ -1,6 +1,5 @@
 package com.icloud.droppable
 
-import com.icloud.droppable.DroppableDataFilter2
 import com.icloud.extensions.seconds
 import com.icloud.extensions.timestampedValue
 import org.apache.beam.sdk.coders.StringUtf8Coder

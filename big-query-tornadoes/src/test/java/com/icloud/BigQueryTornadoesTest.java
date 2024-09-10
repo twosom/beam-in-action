@@ -17,58 +17,48 @@ import org.junit.jupiter.api.Test;
 
 class BigQueryTornadoesTest {
 
-    private Pipeline pipeline;
+  private Pipeline pipeline;
 
-    @BeforeEach
-    void setup() {
-        this.pipeline = PipelineUtils.create();
-    }
+  @BeforeEach
+  void setup() {
+    this.pipeline = PipelineUtils.create();
+  }
 
+  @Test
+  void testExtractTornadoes() {
+    final TableRow row = new TableRow().set("month", "6").set("tornado", true);
 
-    @Test
-    void testExtractTornadoes() {
-        final TableRow row =
-                new TableRow().set("month", "6").set("tornado", true);
+    final PCollection<TableRow> input = pipeline.apply(Create.of(ImmutableList.of(row)));
 
-        final PCollection<TableRow> input =
-                pipeline.apply(Create.of(ImmutableList.of(row)));
+    final PCollection<Integer> result = input.apply(ParDo.of(new ExtractTornadoesFn()));
 
-        final PCollection<Integer> result = input.apply(ParDo.of(new ExtractTornadoesFn()));
+    PAssert.that(result).containsInAnyOrder(6);
 
-        PAssert.that(result)
-                .containsInAnyOrder(6);
+    pipeline.run();
+  }
 
-        pipeline.run();
-    }
+  @Test
+  void testNoTornadoes() {
+    final TableRow row = new TableRow().set("month", "6").set("tornado", false);
 
-    @Test
-    void testNoTornadoes() {
-        final TableRow row =
-                new TableRow().set("month", "6").set("tornado", false);
+    final PCollection<TableRow> input = pipeline.apply(Create.of(ImmutableList.of(row)));
 
-        final PCollection<TableRow> input =
-                pipeline.apply(Create.of(ImmutableList.of(row)));
+    final PCollection<Integer> result = input.apply(ParDo.of(new ExtractTornadoesFn()));
 
-        final PCollection<Integer> result =
-                input.apply(ParDo.of(new ExtractTornadoesFn()));
+    PAssert.that(result).empty();
 
-        PAssert.that(result).empty();
+    pipeline.run();
+  }
 
-        pipeline.run();
-    }
+  @Test
+  void testEmpty() {
+    final PCollection<KV<Integer, Long>> inputs =
+        pipeline.apply(Create.empty(new TypeDescriptor<KV<Integer, Long>>() {}));
 
-    @Test
-    void testEmpty() {
-        final PCollection<KV<Integer, Long>> inputs =
-                pipeline.apply(Create.empty(new TypeDescriptor<KV<Integer, Long>>() {
-                }));
+    final PCollection<TableRow> result = inputs.apply(ParDo.of(new FormatCountsFn()));
 
-        final PCollection<TableRow> result =
-                inputs.apply(ParDo.of(new FormatCountsFn()));
+    PAssert.that(result).empty();
 
-        PAssert.that(result).empty();
-
-        pipeline.run();
-    }
-
+    pipeline.run();
+  }
 }

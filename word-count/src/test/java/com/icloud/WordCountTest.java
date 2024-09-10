@@ -16,40 +16,34 @@ import org.junit.jupiter.api.Test;
 
 class WordCountTest {
 
-    static final String[] WORDS_ARRAY =
-            new String[]{
-                    "hi there", "hi", "hi sue bob",
-                    "hi sue", "", "bob hi"
-            };
-    static final List<String> WORDS = Arrays.asList(WORDS_ARRAY);
-    static final String[] COUNTS_ARRAY = new String[]{"hi: 5", "there: 1", "sue: 2", "bob: 2"};
-    private final Pipeline p =
-            Pipeline.create();
+  static final String[] WORDS_ARRAY =
+      new String[] {
+        "hi there", "hi", "hi sue bob",
+        "hi sue", "", "bob hi"
+      };
+  static final List<String> WORDS = Arrays.asList(WORDS_ARRAY);
+  static final String[] COUNTS_ARRAY = new String[] {"hi: 5", "there: 1", "sue: 2", "bob: 2"};
+  private final Pipeline p = Pipeline.create();
 
-    @Test
-    void testExtractWordsFn() {
-        final List<String> words =
-                Arrays.asList(" some input words ", " ", " cool ", " foo ", " bar");
+  @Test
+  void testExtractWordsFn() {
+    final List<String> words = Arrays.asList(" some input words ", " ", " cool ", " foo ", " bar");
 
-        final PCollection<String> output = p.apply(Create.of(words))
-                .apply(ParDo.of(new ExtractWordsFn()));
+    final PCollection<String> output =
+        p.apply(Create.of(words)).apply(ParDo.of(new ExtractWordsFn()));
 
-        PAssert.that(output)
-                .containsInAnyOrder("some", "input", "words", "cool", "foo", "bar");
+    PAssert.that(output).containsInAnyOrder("some", "input", "words", "cool", "foo", "bar");
 
-        p.run().waitUntilFinish();
-    }
+    p.run().waitUntilFinish();
+  }
 
-    @Test
-    void testCountWords() {
-        final PCollection<String> input = p.apply(Create.of(WORDS).withCoder(StringUtf8Coder.of()));
-        final PCollection<String> output = input.apply(new CountWords())
-                .apply(MapElements.via(new FormatAsTextFn()));
+  @Test
+  void testCountWords() {
+    final PCollection<String> input = p.apply(Create.of(WORDS).withCoder(StringUtf8Coder.of()));
+    final PCollection<String> output =
+        input.apply(new CountWords()).apply(MapElements.via(new FormatAsTextFn()));
 
-        PAssert.that(output)
-                .containsInAnyOrder(COUNTS_ARRAY);
-        p.run().waitUntilFinish();
-    }
-
-
+    PAssert.that(output).containsInAnyOrder(COUNTS_ARRAY);
+    p.run().waitUntilFinish();
+  }
 }

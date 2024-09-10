@@ -21,177 +21,164 @@ import org.junit.runners.JUnit4;
 @SuppressWarnings("unchecked")
 public class PipelineTest {
 
-    private static final Duration TEAM_WINDOW_DURATION =
-            Duration.standardMinutes(20);
+  private static final Duration TEAM_WINDOW_DURATION = Duration.standardMinutes(20);
 
-    private static final Duration ALLOWED_LATENESS =
-            Duration.standardHours(1);
+  private static final Duration ALLOWED_LATENESS = Duration.standardHours(1);
 
-    private final Instant baseTime = new Instant(0L);
+  private final Instant baseTime = new Instant(0L);
 
-    @Rule
-    public TestPipeline p = TestPipeline.create();
+  @Rule public TestPipeline p = TestPipeline.create();
 
-    @Test
-    public void test_pipeline_is_not_null() {
-        assertNotNull(p);
-    }
+  @Test
+  public void test_pipeline_is_not_null() {
+    assertNotNull(p);
+  }
 
-    @Test
-    public void everything_arrives_on_time() {
-        final TestStream<GameActionInfo> createEvents = TestStream.create(AvroCoder.of(GameActionInfo.class))
-                .advanceWatermarkTo(baseTime)
-                .addElements(
-                        gameActionInfo("sky", "blue", 12, Duration.ZERO),
-                        gameActionInfo("navy", "blue", 3, Duration.ZERO),
-                        gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L))
-                )
-                .advanceWatermarkTo(baseTime.plus(TEAM_WINDOW_DURATION)
-                        .plus(Duration.standardMinutes(1L))
-                )
-                .advanceWatermarkToInfinity();
+  @Test
+  public void everything_arrives_on_time() {
+    final TestStream<GameActionInfo> createEvents =
+        TestStream.create(AvroCoder.of(GameActionInfo.class))
+            .advanceWatermarkTo(baseTime)
+            .addElements(
+                gameActionInfo("sky", "blue", 12, Duration.ZERO),
+                gameActionInfo("navy", "blue", 3, Duration.ZERO),
+                gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L)))
+            .advanceWatermarkTo(
+                baseTime.plus(TEAM_WINDOW_DURATION).plus(Duration.standardMinutes(1L)))
+            .advanceWatermarkToInfinity();
 
-        final PCollection<KV<String, Integer>> teamScores =
-                p.apply(createEvents)
-                        .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
+    final PCollection<KV<String, Integer>> teamScores =
+        p.apply(createEvents)
+            .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
 
-        final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
+    final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
 
-        PAssert.that(teamScores)
-                .inWindow(window)
-                .containsInAnyOrder(KV.of("blue", 18));
+    PAssert.that(teamScores).inWindow(window).containsInAnyOrder(KV.of("blue", 18));
 
-        p.run();
-    }
+    p.run();
+  }
 
-    @Test
-    public void some_elements_are_late_but_arrive_before_the_end_of_the_window() {
-        final TestStream<GameActionInfo> createEvents = TestStream.create(AvroCoder.of(GameActionInfo.class))
-                .advanceWatermarkTo(baseTime)
-                .addElements(
-                        gameActionInfo("sky", "blue", 3, Duration.ZERO),
-                        gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L))
-                )
-                .advanceWatermarkTo(baseTime.plus(TEAM_WINDOW_DURATION).minus(Duration.standardMinutes(1L)))
-                .addElements(gameActionInfo("sky", "blue", 12, Duration.ZERO))
-                .advanceWatermarkToInfinity();
+  @Test
+  public void some_elements_are_late_but_arrive_before_the_end_of_the_window() {
+    final TestStream<GameActionInfo> createEvents =
+        TestStream.create(AvroCoder.of(GameActionInfo.class))
+            .advanceWatermarkTo(baseTime)
+            .addElements(
+                gameActionInfo("sky", "blue", 3, Duration.ZERO),
+                gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L)))
+            .advanceWatermarkTo(
+                baseTime.plus(TEAM_WINDOW_DURATION).minus(Duration.standardMinutes(1L)))
+            .addElements(gameActionInfo("sky", "blue", 12, Duration.ZERO))
+            .advanceWatermarkToInfinity();
 
-        final PCollection<KV<String, Integer>> teamScores = p.apply(createEvents)
-                .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
+    final PCollection<KV<String, Integer>> teamScores =
+        p.apply(createEvents)
+            .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
 
-        final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
+    final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
 
-        PAssert.that(teamScores)
-                .inOnTimePane(window)
-                .containsInAnyOrder(KV.of("blue", 18));
+    PAssert.that(teamScores).inOnTimePane(window).containsInAnyOrder(KV.of("blue", 18));
 
-        p.run();
-    }
+    p.run();
+  }
 
-    @Test
-    public void elements_are_late_and_arrive_after_the_end_of_the_window() {
-        final TestStream<GameActionInfo> createEvents = TestStream.create(AvroCoder.of(GameActionInfo.class))
-                .advanceWatermarkTo(baseTime)
-                .addElements(
-                        gameActionInfo("sky", "blue", 3, Duration.ZERO),
-                        gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L))
-                )
+  @Test
+  public void elements_are_late_and_arrive_after_the_end_of_the_window() {
+    final TestStream<GameActionInfo> createEvents =
+        TestStream.create(AvroCoder.of(GameActionInfo.class))
+            .advanceWatermarkTo(baseTime)
+            .addElements(
+                gameActionInfo("sky", "blue", 3, Duration.ZERO),
+                gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L)))
 
-                // Move the watermark up to "near" the end of the window + allowed lateness
-                .advanceWatermarkTo(baseTime.plus(TEAM_WINDOW_DURATION).plus(ALLOWED_LATENESS).minus(Duration.standardMinutes(1L)))
-                .addElements(gameActionInfo("sky", "blue", 12, Duration.ZERO))
+            // Move the watermark up to "near" the end of the window + allowed lateness
+            .advanceWatermarkTo(
+                baseTime
+                    .plus(TEAM_WINDOW_DURATION)
+                    .plus(ALLOWED_LATENESS)
+                    .minus(Duration.standardMinutes(1L)))
+            .addElements(gameActionInfo("sky", "blue", 12, Duration.ZERO))
+            .advanceWatermarkToInfinity();
 
-                .advanceWatermarkToInfinity();
+    final PCollection<KV<String, Integer>> teamScores =
+        p.apply(createEvents)
+            .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS))
+            .apply(LogUtils.of());
 
+    final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
 
-        final PCollection<KV<String, Integer>> teamScores = p.apply(createEvents)
-                .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS))
-                .apply(LogUtils.of());
+    PAssert.that(teamScores).inOnTimePane(window).containsInAnyOrder(KV.of("blue", 6));
 
-        final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
+    PAssert.that(teamScores).inFinalPane(window).containsInAnyOrder(KV.of("blue", 18));
 
-        PAssert.that(teamScores)
-                .inOnTimePane(window)
-                .containsInAnyOrder(KV.of("blue", 6));
+    p.run();
+  }
 
-        PAssert.that(teamScores)
-                .inFinalPane(window)
-                .containsInAnyOrder(KV.of("blue", 18));
+  @Test
+  public void elements_are_late_and_after_the_end_of_the_window_plus_the_allowed_lateness() {
+    final TestStream<GameActionInfo> createEvents =
+        TestStream.create(AvroCoder.of(GameActionInfo.class))
+            .advanceWatermarkTo(baseTime)
+            .addElements(
+                gameActionInfo("sky", "blue", 3, Duration.ZERO),
+                gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L)))
+            .advanceWatermarkTo(
+                baseTime
+                    .plus(TEAM_WINDOW_DURATION)
+                    .plus(ALLOWED_LATENESS)
+                    .plus(Duration.standardMinutes(1)))
+            .addElements(
+                gameActionInfo(
+                    "sky",
+                    "blue",
+                    12,
+                    Duration.millis(
+                        baseTime
+                            .plus(TEAM_WINDOW_DURATION)
+                            .minus(Duration.standardMinutes(1L))
+                            .getMillis())))
+            .advanceWatermarkToInfinity();
 
-        p.run();
-    }
+    final PCollection<KV<String, Integer>> teamScores =
+        p.apply(createEvents)
+            .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
 
-    @Test
-    public void elements_are_late_and_after_the_end_of_the_window_plus_the_allowed_lateness() {
-        final TestStream<GameActionInfo> createEvents =
-                TestStream.create(AvroCoder.of(GameActionInfo.class))
-                        .advanceWatermarkTo(baseTime)
-                        .addElements(
-                                gameActionInfo("sky", "blue", 3, Duration.ZERO),
-                                gameActionInfo("navy", "blue", 3, Duration.standardMinutes(3L))
-                        )
-                        .advanceWatermarkTo(baseTime.plus(TEAM_WINDOW_DURATION)
-                                .plus(ALLOWED_LATENESS)
-                                .plus(Duration.standardMinutes(1))
-                        )
-                        .addElements(
-                                gameActionInfo("sky", "blue", 12,
-                                        Duration.millis(
-                                                baseTime.plus(TEAM_WINDOW_DURATION).minus(Duration.standardMinutes(1L)).getMillis()
-                                        )
-                                )
-                        )
-                        .advanceWatermarkToInfinity();
+    final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
+    PAssert.that(teamScores).inWindow(window).containsInAnyOrder(KV.of("blue", 6));
 
-        final PCollection<KV<String, Integer>> teamScores = p.apply(createEvents)
-                .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
+    p.run();
+  }
 
+  @Test
+  public void elements_arrive_before_the_end_of_the_window_and_some_processing_time_passes() {
+    final TestStream<GameActionInfo> createEvents =
+        TestStream.create(AvroCoder.of(GameActionInfo.class))
+            .advanceWatermarkTo(baseTime)
+            .addElements(
+                gameActionInfo("scarlet", "red", 3, Duration.ZERO),
+                gameActionInfo("scarlet", "red", 2, Duration.standardMinutes(1L)))
+            .advanceProcessingTime(Duration.standardMinutes(12L))
+            .addElements(
+                gameActionInfo("oxblood", "red", 2, Duration.standardSeconds(22L)),
+                gameActionInfo("scarlet", "red", 4, Duration.standardMinutes(2L)))
+            .advanceProcessingTime(Duration.standardMinutes(15L))
+            .advanceWatermarkToInfinity();
 
-        final IntervalWindow window = new IntervalWindow(baseTime, TEAM_WINDOW_DURATION);
-        PAssert.that(teamScores)
-                .inWindow(window)
-                .containsInAnyOrder(KV.of("blue", 6));
+    final PCollection<KV<String, Integer>> userScores =
+        p.apply(createEvents)
+            .apply(new CalculateUserScores(ALLOWED_LATENESS))
+            .apply(LogUtils.of(true));
 
-        p.run();
-    }
+    PAssert.that(userScores)
+        .inEarlyGlobalWindowPanes()
+        .containsInAnyOrder(KV.of("scarlet", 5), KV.of("scarlet", 9), KV.of("oxblood", 2));
 
-    @Test
-    public void elements_arrive_before_the_end_of_the_window_and_some_processing_time_passes() {
-        final TestStream<GameActionInfo> createEvents = TestStream.create(AvroCoder.of(GameActionInfo.class))
-                .advanceWatermarkTo(baseTime)
-                .addElements(
-                        gameActionInfo("scarlet", "red", 3, Duration.ZERO),
-                        gameActionInfo("scarlet", "red", 2, Duration.standardMinutes(1L))
-                )
-                .advanceProcessingTime(Duration.standardMinutes(12L))
-                .addElements(
-                        gameActionInfo("oxblood", "red", 2, Duration.standardSeconds(22L)),
-                        gameActionInfo("scarlet", "red", 4, Duration.standardMinutes(2L))
-                )
-                .advanceProcessingTime(Duration.standardMinutes(15L))
-                .advanceWatermarkToInfinity();
+    p.run();
+  }
 
-        final PCollection<KV<String, Integer>> userScores = p.apply(createEvents)
-                .apply(new CalculateUserScores(ALLOWED_LATENESS))
-                .apply(LogUtils.of(true));
-
-        PAssert.that(userScores)
-                .inEarlyGlobalWindowPanes()
-                .containsInAnyOrder(
-                        KV.of("scarlet", 5),
-                        KV.of("scarlet", 9),
-                        KV.of("oxblood", 2)
-                );
-
-        p.run();
-    }
-
-    private TimestampedValue<GameActionInfo> gameActionInfo(String name, String team, int score, Duration timestamp) {
-        return TimestampedValue.of(
-                new GameActionInfo(name, team, score, timestamp.getMillis()),
-                baseTime.plus(timestamp)
-        );
-    }
-
-
+  private TimestampedValue<GameActionInfo> gameActionInfo(
+      String name, String team, int score, Duration timestamp) {
+    return TimestampedValue.of(
+        new GameActionInfo(name, team, score, timestamp.getMillis()), baseTime.plus(timestamp));
+  }
 }

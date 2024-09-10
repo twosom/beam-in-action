@@ -1,7 +1,5 @@
 package com.icloud
 
-import com.icloud.Utils
-
 abstract class HasInput {
 
     val input: List<String>

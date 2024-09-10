@@ -11,28 +11,21 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 
 public class FirstPipeline {
-    public static void main(String[] args) throws IOException {
-        final ClassLoader loader =
-                FirstPipeline.class.getClassLoader();
+  public static void main(String[] args) throws IOException {
+    final ClassLoader loader = FirstPipeline.class.getClassLoader();
 
-        final String file =
-                loader.getResource("lorem.txt").getFile();
+    final String file = loader.getResource("lorem.txt").getFile();
 
-        final List<String> lines =
-                Files.readAllLines(Paths.get(file), StandardCharsets.UTF_8);
+    final List<String> lines = Files.readAllLines(Paths.get(file), StandardCharsets.UTF_8);
 
-        final Pipeline pipeline = PipelineUtils.create(args);
+    final Pipeline pipeline = PipelineUtils.create(args);
 
-        final PCollection<String> input =
-                pipeline.apply(Create.of(lines));
+    final PCollection<String> input = pipeline.apply(Create.of(lines));
 
-        final PCollection<String> words =
-                input.apply(Tokenize.of());
+    final PCollection<String> words = input.apply(Tokenize.of());
 
-        words.apply(Count.perElement())
-                .apply(LogUtils.of());
+    words.apply(Count.perElement()).apply(LogUtils.of());
 
-        pipeline.run()
-                .waitUntilFinish();
-    }
+    pipeline.run().waitUntilFinish();
+  }
 }

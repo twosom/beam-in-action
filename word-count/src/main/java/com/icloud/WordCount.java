@@ -16,64 +16,53 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class WordCount {
 
-    public static void runWordCount(WordCountOptions options) {
-        final Pipeline p = Pipeline.create(options);
+  public static void runWordCount(WordCountOptions options) {
+    final Pipeline p = Pipeline.create(options);
 
-        p.apply("ReadLines", TextIO.read().from(options.getInputFile()))
-                .apply(new CountWords())
-                .apply(MapElements.via(new FormatAsTextFn()))
-                .apply("WriteCounts", TextIO.write().to(options.getOutput()));
+    p.apply("ReadLines", TextIO.read().from(options.getInputFile()))
+        .apply(new CountWords())
+        .apply(MapElements.via(new FormatAsTextFn()))
+        .apply("WriteCounts", TextIO.write().to(options.getOutput()));
 
+    p.run().waitUntilFinish();
+  }
 
-        p.run().waitUntilFinish();
-    }
+  public static void main(String[] args) {
+    final WordCountOptions options = createOption(args, WordCountOptions.class);
+    runWordCount(options);
+  }
 
-    public static void main(String[] args) {
-        final WordCountOptions options =
-                createOption(args, WordCountOptions.class);
-        runWordCount(options);
-    }
+  @VisibleForTesting
+  static class ExtractWordsFn extends DoFn<String, String> {
 
-    @VisibleForTesting
-    static class ExtractWordsFn
-            extends DoFn<String, String> {
+    private final Counter emptyLines = Metrics.counter(ExtractWordsFn.class, "emptyLines");
 
-        private final Counter emptyLines =
-                Metrics.counter(ExtractWordsFn.class, "emptyLines");
+    private final Distribution lineLenDist =
+        Metrics.distribution(ExtractWordsFn.class, "lineLenDistro");
 
-        private final Distribution lineLenDist =
-                Metrics.distribution(ExtractWordsFn.class, "lineLenDistro");
+    @ProcessElement
+    public void process(@Element String element, OutputReceiver<String> output) {
+      this.lineLenDist.update(element.length());
+      if (element.trim().isEmpty()) {
+        this.emptyLines.inc();
+      }
 
-        @ProcessElement
-        public void process(
-                @Element String element,
-                OutputReceiver<String> output
-        ) {
-            this.lineLenDist.update(element.length());
-            if (element.trim().isEmpty()) {
-                this.emptyLines.inc();
-            }
-
-            final String[] words = element.split(TOKENIZER_PATTERN, -1);
-            for (String word : words) {
-                if (!word.isEmpty()) {
-                    output.output(word);
-                }
-            }
+      final String[] words = element.split(TOKENIZER_PATTERN, -1);
+      for (String word : words) {
+        if (!word.isEmpty()) {
+          output.output(word);
         }
-
+      }
     }
+  }
 
-    @VisibleForTesting
-    static class CountWords
-            extends PTransform<@NonNull PCollection<String>, @NonNull PCollection<KV<String, Long>>> {
+  @VisibleForTesting
+  static class CountWords
+      extends PTransform<@NonNull PCollection<String>, @NonNull PCollection<KV<String, Long>>> {
 
-        @Override
-        public PCollection<KV<String, Long>> expand(PCollection<String> lines) {
-            return lines
-                    .apply(ParDo.of(new ExtractWordsFn()))
-                    .apply(Count.perElement());
-        }
-
+    @Override
+    public PCollection<KV<String, Long>> expand(PCollection<String> lines) {
+      return lines.apply(ParDo.of(new ExtractWordsFn())).apply(Count.perElement());
     }
+  }
 }

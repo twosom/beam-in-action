@@ -19,41 +19,38 @@ import org.joda.time.Instant;
 
 public class FirstStreamPipeline {
 
-    public static void main(String[] args) throws IOException {
-        final ClassLoader loader =
-                FirstStreamPipeline.class.getClassLoader();
+  public static void main(String[] args) throws IOException {
+    final ClassLoader loader = FirstStreamPipeline.class.getClassLoader();
 
-        final String file = loader.getResource("lorem.txt").getFile();
+    final String file = loader.getResource("lorem.txt").getFile();
 
-        final List<String> lines =
-                Files.readLines(new File(file), StandardCharsets.UTF_8);
+    final List<String> lines = Files.readLines(new File(file), StandardCharsets.UTF_8);
 
-        TestStream.Builder<String> builder =
-                TestStream.create(StringUtf8Coder.of());
+    TestStream.Builder<String> builder = TestStream.create(StringUtf8Coder.of());
 
-        final Instant now = Instant.now();
+    final Instant now = Instant.now();
 
-        final List<TimestampedValue<String>> timestamped =
-                IntStream.range(0, lines.size())
-                        .mapToObj(i -> TimestampedValue.of(lines.get(i), now.plus(i)))
-                        .collect(Collectors.toList());
+    final List<TimestampedValue<String>> timestamped =
+        IntStream.range(0, lines.size())
+            .mapToObj(i -> TimestampedValue.of(lines.get(i), now.plus(i)))
+            .collect(Collectors.toList());
 
-        for (TimestampedValue<String> value : timestamped) {
-            builder = builder.addElements(value);
-        }
-
-        final Pipeline pipeline = PipelineUtils.create(args);
-
-
-        pipeline.apply(builder.advanceWatermarkToInfinity())
-                .apply(Tokenize.of())
-                .apply(Window.<String>into(new GlobalWindows())
-                        .discardingFiredPanes()
-                        .triggering(AfterWatermark.pastEndOfWindow())
-                )
-                .apply(Count.perElement())
-                .apply(LogUtils.of());
-
-        pipeline.run();
+    for (TimestampedValue<String> value : timestamped) {
+      builder = builder.addElements(value);
     }
+
+    final Pipeline pipeline = PipelineUtils.create(args);
+
+    pipeline
+        .apply(builder.advanceWatermarkToInfinity())
+        .apply(Tokenize.of())
+        .apply(
+            Window.<String>into(new GlobalWindows())
+                .discardingFiredPanes()
+                .triggering(AfterWatermark.pastEndOfWindow()))
+        .apply(Count.perElement())
+        .apply(LogUtils.of());
+
+    pipeline.run();
+  }
 }

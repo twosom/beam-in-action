@@ -108,7 +108,7 @@ class SportTrackerTest {
 
     private fun asTestStream(input: List<KV<String, Position>>): TestStream<KV<String, Position>> {
         var builder =
-            TestStream.create(KvCoder.of(StringUtf8Coder.of(), PositionCoder()))
+            TestStream.create(KvCoder.of(StringUtf8Coder.of(), PositionCoder.of()))
 
         for (kv in input) {
             builder = builder.addElements(

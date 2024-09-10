@@ -26,75 +26,69 @@ import org.joda.time.Instant;
 
 public class TopKWords {
 
-    public static void main(String[] args) {
-        final Pipeline pipeline = PipelineUtils.create(args, TopKWordsOptions.class);
-        final TopKWordsOptions options =
-                pipeline.getOptions().as(TopKWordsOptions.class);
+  public static void main(String[] args) {
+    final Pipeline pipeline = PipelineUtils.create(args, TopKWordsOptions.class);
+    final TopKWordsOptions options = pipeline.getOptions().as(TopKWordsOptions.class);
 
-        final PCollection<String> lines =
-                pipeline.apply(
-                                KafkaIO.<String, String>read()
-                                        .withBootstrapServers(options.getBootstrapServer())
-                                        .withKeyDeserializer(StringDeserializer.class)
-                                        .withValueDeserializer(StringDeserializer.class)
-                                        .withTopic(options.getInputTopic())
-                                        .withTimestampPolicyFactory((tp, previousWatermark) ->
-                                                PreventIdleWatermarkPolicy.of(e -> Instant.now(),
-                                                        Duration.standardSeconds(1),
-                                                        previousWatermark,
-                                                        true
-                                                ))
-                                        .withoutMetadata()
-                        )
-                        .apply(MapElements.into(strings()).via(KV::getValue));
-        final PCollection<KV<String, Long>> output =
-                countWordsInFixedWindows(
-                        lines,
-                        Duration.standardSeconds(options.getWindowLength()), options.getK()
-                );
+    final PCollection<String> lines =
+        pipeline
+            .apply(
+                KafkaIO.<String, String>read()
+                    .withBootstrapServers(options.getBootstrapServer())
+                    .withKeyDeserializer(StringDeserializer.class)
+                    .withValueDeserializer(StringDeserializer.class)
+                    .withTopic(options.getInputTopic())
+                    .withTimestampPolicyFactory(
+                        (tp, previousWatermark) ->
+                            PreventIdleWatermarkPolicy.of(
+                                e -> Instant.now(),
+                                Duration.standardSeconds(1),
+                                previousWatermark,
+                                true))
+                    .withoutMetadata())
+            .apply(MapElements.into(strings()).via(KV::getValue));
+    final PCollection<KV<String, Long>> output =
+        countWordsInFixedWindows(
+            lines, Duration.standardSeconds(options.getWindowLength()), options.getK());
 
+    output.apply(
+        KafkaIO.<String, Long>write()
+            .withBootstrapServers(options.getBootstrapServer())
+            .withKeySerializer(StringSerializer.class)
+            .withValueSerializer(LongSerializer.class)
+            .withTopic(options.getOutputTopic()));
 
-        output.apply(
-                KafkaIO.<String, Long>write()
-                        .withBootstrapServers(options.getBootstrapServer())
-                        .withKeySerializer(StringSerializer.class)
-                        .withValueSerializer(LongSerializer.class)
-                        .withTopic(options.getOutputTopic())
-        );
+    pipeline.run();
+  }
 
-        pipeline.run();
-    }
+  @VisibleForTesting
+  static PCollection<KV<String, Long>> countWordsInFixedWindows(
+      PCollection<String> lines, Duration size, Integer k) {
+    return lines
+        .apply(Window.into(FixedWindows.of(size)))
+        .apply(Tokenize.of())
+        .apply(Count.perElement())
+        .apply(
+            Top.of(
+                    k,
+                    (Comparator<KV<String, Long>> & Serializable)
+                        (a, b) -> Long.compare(a.getValue(), b.getValue()))
+                .withoutDefaults())
+        .apply(Flatten.iterables());
+  }
 
-    @VisibleForTesting
-    static PCollection<KV<String, Long>> countWordsInFixedWindows(
-            PCollection<String> lines,
-            Duration size, Integer k
-    ) {
-        return lines.apply(Window.into(FixedWindows.of(size)))
-                .apply(Tokenize.of())
-                .apply(Count.perElement())
-                .apply(Top.of(
-                        k,
-                        (Comparator<KV<String, Long>> & Serializable)
-                                (a, b) -> Long.compare(a.getValue(), b.getValue())
-                ).withoutDefaults())
-                .apply(Flatten.iterables());
-    }
+  public interface TopKWordsOptions extends CommonKafkaOptions {
 
-    public interface TopKWordsOptions
-            extends CommonKafkaOptions {
+    @Validation.Required
+    @Description("length of the window ::: UNIT = SECOND")
+    Integer getWindowLength();
 
-        @Validation.Required
-        @Description("length of the window ::: UNIT = SECOND")
-        Integer getWindowLength();
+    void setWindowLength(Integer value);
 
-        void setWindowLength(Integer value);
+    @Validation.Required
+    @Description("k value for Top K")
+    Integer getK();
 
-        @Validation.Required
-        @Description("k value for Top K")
-        Integer getK();
-
-        void setK(Integer value);
-
-    }
+    void setK(Integer value);
+  }
 }

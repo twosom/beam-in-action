@@ -23,33 +23,33 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class WindowExampleTest {
-    @Rule
-    public final transient TestPipeline pipeline = TestPipeline.create();
+  @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
-    @Test
-    public void testWindowExample() {
-        final List<String> input = Arrays.asList("foo", "bar", "foo", "foo");
-        final List<Long> timestamps = Arrays.asList(
-                Duration.standardSeconds(15).getMillis(),
-                Duration.standardSeconds(30).getMillis(),
-                Duration.standardSeconds(45).getMillis(),
-                Duration.standardSeconds(90).getMillis()
-        );
+  @Test
+  public void testWindowExample() {
+    final List<String> input = Arrays.asList("foo", "bar", "foo", "foo");
+    final List<Long> timestamps =
+        Arrays.asList(
+            Duration.standardSeconds(15).getMillis(),
+            Duration.standardSeconds(30).getMillis(),
+            Duration.standardSeconds(45).getMillis(),
+            Duration.standardSeconds(90).getMillis());
 
-        final PCollection<ValueInSingleWindow<KV<String, Long>>> windowedCounts = pipeline.apply(Create.timestamped(input, timestamps))
-                .apply(Window.into(FixedWindows.of(Duration.standardMinutes(1))))
-                .apply(Count.perElement())
-                .apply(Reify.windows());
+    final PCollection<ValueInSingleWindow<KV<String, Long>>> windowedCounts =
+        pipeline
+            .apply(Create.timestamped(input, timestamps))
+            .apply(Window.into(FixedWindows.of(Duration.standardMinutes(1))))
+            .apply(Count.perElement())
+            .apply(Reify.windows());
 
-        PAssert.that(windowedCounts)
-                .satisfies(i -> {
-                    final long windowCount = Streams.stream(i)
-                            .count();
-                    assertEquals(windowCount, 3);
+    PAssert.that(windowedCounts)
+        .satisfies(
+            i -> {
+              final long windowCount = Streams.stream(i).count();
+              assertEquals(windowCount, 3);
 
-                    return null;
-                });
-        pipeline.run();
-    }
-
+              return null;
+            });
+    pipeline.run();
+  }
 }
