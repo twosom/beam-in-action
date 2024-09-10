@@ -13,38 +13,36 @@ import org.joda.time.Duration;
 
 @VisibleForTesting
 public class CalculateTeamScores
-        extends PTransform<@NonNull PCollection<GameActionInfo>, @NonNull PCollection<KV<String, Integer>>> {
-    static final Duration FIVE_MINUTES = Duration.standardMinutes(5);
-    static final Duration TEN_MINUTES = Duration.standardMinutes(10);
+    extends PTransform<
+        @NonNull PCollection<GameActionInfo>, @NonNull PCollection<KV<String, Integer>>> {
+  static final Duration FIVE_MINUTES = Duration.standardMinutes(5);
+  static final Duration TEN_MINUTES = Duration.standardMinutes(10);
 
-    private final Duration teamWindowDuration;
-    private final Duration allowedLateness;
+  private final Duration teamWindowDuration;
+  private final Duration allowedLateness;
 
-    CalculateTeamScores(Duration teamWindowDuration, Duration allowedLateness) {
-        this.teamWindowDuration = teamWindowDuration;
-        this.allowedLateness = allowedLateness;
-    }
+  CalculateTeamScores(Duration teamWindowDuration, Duration allowedLateness) {
+    this.teamWindowDuration = teamWindowDuration;
+    this.allowedLateness = allowedLateness;
+  }
 
-    @Override
-    public PCollection<KV<String, Integer>> expand(PCollection<GameActionInfo> infos) {
-        return infos
-                .apply(
-                        "LeaderboardTeamFixedWindows",
-                        Window.<GameActionInfo>into(FixedWindows.of(teamWindowDuration))
-                                // We will get early (speculative) results as well as cumulative
-                                // processing of late data.
-                                .triggering(
-                                        AfterWatermark.pastEndOfWindow()
-                                                .withEarlyFirings(
-                                                        AfterProcessingTime.pastFirstElementInPane()
-                                                                .plusDelayOf(FIVE_MINUTES))
-                                                .withLateFirings(
-                                                        AfterProcessingTime.pastFirstElementInPane()
-                                                                .plusDelayOf(TEN_MINUTES)))
-                                .withAllowedLateness(allowedLateness)
-                                .accumulatingFiredPanes()
-                )
-                // Extract and sum teamname/score pairs from the event data.
-                .apply("ExtractTeamScore", new ExtractAndSumScore("team"));
-    }
+  @Override
+  public PCollection<KV<String, Integer>> expand(PCollection<GameActionInfo> infos) {
+    return infos
+        .apply(
+            "LeaderboardTeamFixedWindows",
+            Window.<GameActionInfo>into(FixedWindows.of(teamWindowDuration))
+                // We will get early (speculative) results as well as cumulative
+                // processing of late data.
+                .triggering(
+                    AfterWatermark.pastEndOfWindow()
+                        .withEarlyFirings(
+                            AfterProcessingTime.pastFirstElementInPane().plusDelayOf(FIVE_MINUTES))
+                        .withLateFirings(
+                            AfterProcessingTime.pastFirstElementInPane().plusDelayOf(TEN_MINUTES)))
+                .withAllowedLateness(allowedLateness)
+                .accumulatingFiredPanes())
+        // Extract and sum teamname/score pairs from the event data.
+        .apply("ExtractTeamScore", new ExtractAndSumScore("team"));
+  }
 }

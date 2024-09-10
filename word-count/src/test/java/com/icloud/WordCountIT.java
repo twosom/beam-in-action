@@ -1,5 +1,10 @@
 package com.icloud;
 
+import static com.icloud.WordCount.runWordCount;
+import static org.apache.beam.sdk.testing.FileChecksumMatcher.fileContentsHaveChecksum;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.util.Date;
 import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.io.fs.ResolveOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -11,21 +16,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.Date;
-
-import static com.icloud.WordCount.runWordCount;
-import static org.apache.beam.sdk.testing.FileChecksumMatcher.fileContentsHaveChecksum;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 @RunWith(JUnit4.class)
 public class WordCountIT {
     private static final String DEFAULT_INPUT =
             "gs://apache-beam-samples/shakespeare/winterstale-personae";
     private static final String DEFAULT_OUTPUT_CHECKSUM = "ebf895e7324e8a3edc72e7bcc96fa2ba7f690def";
-
-    public interface WordCountITOptions
-            extends TestPipelineOptions, WordCountOptions {
-    }
 
     @BeforeClass
     public static void setUp() {
@@ -52,5 +47,9 @@ public class WordCountIT {
         assertThat(
                 new NumberedShardedFile(options.getOutput() + "*-of-*"),
                 fileContentsHaveChecksum(DEFAULT_OUTPUT_CHECKSUM));
+    }
+
+    public interface WordCountITOptions
+            extends TestPipelineOptions, WordCountOptions {
     }
 }

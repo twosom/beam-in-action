@@ -94,7 +94,7 @@ class SportTrackerTest {
                         "%s:%d,%d".format(
                             kv.key,
                             round(kv.value.length).toInt(),
-                            kv.value.time.toInt()
+                            kv.value.duration.toInt()
                         )
                     }
             )

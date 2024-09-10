@@ -6,7 +6,6 @@ import com.icloud.PipelineUtils
 import com.icloud.extensions.*
 import org.apache.beam.sdk.coders.Coder
 import org.apache.beam.sdk.coders.InstantCoder
-import org.apache.beam.sdk.coders.KvCoder
 import org.apache.beam.sdk.coders.StringUtf8Coder
 import org.apache.beam.sdk.metrics.Counter
 import org.apache.beam.sdk.metrics.Metrics
@@ -77,7 +76,7 @@ object DroppableDataFilter2 : AbstractDroppableDataFilter() {
         input: PCollection<String>,
     ): PCollectionTuple {
         val windowingStrategy: WindowingStrategy<String, BoundedWindow> =
-            input.typeWindowingStrategy
+            input.typedWindowingStrategy
         val windowFn = windowingStrategy.windowFn
         val windowCoder: Coder<BoundedWindow> = windowFn.windowCoder()
 
@@ -281,7 +280,7 @@ object DroppableDataFilter2 : AbstractDroppableDataFilter() {
 
         @StateId(BUFFER)
         private val bufferSpec: StateSpec<BagState<KV<Instant, String>>> =
-            StateSpecs.bag(KvCoder.of(InstantCoder.of(), StringUtf8Coder.of()))
+            StateSpecs.bag(InstantCoder.of() kvc StringUtf8Coder.of())
                 .also { logStateInitialized(BUFFER) }
 
         @TimerId(BUFFER_FLUSH_TIMER)

@@ -24,10 +24,11 @@ object PipelineUtils {
         createOption(args, optionClass).pipeline()
 
     @JvmStatic
+    @JvmOverloads
     fun <T : PipelineOptions> createWithHdfsConf(
         hdfs: String,
         args: Array<String>,
-        optionClass: Class<T>?,
+        optionClass: Class<T>? = null,
     ): Pipeline =
         createPipeline(createHdfsConf(hdfs, args, optionClass))
 

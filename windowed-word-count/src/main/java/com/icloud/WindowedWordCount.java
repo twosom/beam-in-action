@@ -1,5 +1,7 @@
 package com.icloud;
 
+import java.io.IOException;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
@@ -16,34 +18,44 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
-import java.io.IOException;
-import java.util.concurrent.ThreadLocalRandom;
-
-
 public class WindowedWordCount {
 
-    private static class AddTimestampFn extends DoFn<String, String> {
-        private final Instant minTimestamp;
-        private final Instant maxTimestamp;
+    static final int WINDOW_SIZE = 10; // Default window duration in minutes
 
-        public AddTimestampFn(Instant minTimestamp, Instant maxTimestamp) {
-            this.minTimestamp = minTimestamp;
-            this.maxTimestamp = maxTimestamp;
-        }
+    public static void runWindowedWordCount(Options options) throws IOException {
+        final String output = options.getOutput();
+        final Instant minTimestamp = new Instant(options.getMinTimestampMillis());
+        final Instant maxTimestamp = new Instant(options.getMaxTimestampMillis());
 
-        @ProcessElement
-        public void process(
-                @Element String line,
-                OutputReceiver<String> output
-        ) {
-            final Instant randomTimestamp = new Instant(ThreadLocalRandom.current()
-                    .nextLong(minTimestamp.getMillis(), maxTimestamp.getMillis()));
 
-            output.outputWithTimestamp(line, randomTimestamp);
+        final Pipeline pipeline = Pipeline.create(options);
+
+        final PCollection<String> input = pipeline.apply(TextIO.read().from(options.getInputFile()))
+                .apply(ParDo.of(new AddTimestampFn(minTimestamp, maxTimestamp)));
+
+        final PCollection<String> windowedWords =
+                input.apply(Window.into(FixedWindows.of(Duration.standardMinutes(options.getWindowSize()))));
+
+        final PCollection<KV<String, Long>> wordCounts =
+                windowedWords.apply(CountWords.of());
+
+        wordCounts
+                .apply(MapElements.via(new FormatAsTextFn()))
+                .apply(new WriteOneFilePerWindow(output, options.getNumShards()));
+
+        final PipelineResult result = pipeline.run();
+        try {
+            result.waitUntilFinish();
+        } catch (Exception e) {
+            result.cancel();
         }
     }
 
-    static final int WINDOW_SIZE = 10; // Default window duration in minutes
+    public static void main(String[] args) throws IOException {
+        final Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+
+        runWindowedWordCount(options);
+    }
 
     public interface Options
             extends WordCountOptions, ExampleOptions, ExampleBigQueryTableOptions {
@@ -73,6 +85,27 @@ public class WindowedWordCount {
 
     }
 
+    private static class AddTimestampFn extends DoFn<String, String> {
+        private final Instant minTimestamp;
+        private final Instant maxTimestamp;
+
+        public AddTimestampFn(Instant minTimestamp, Instant maxTimestamp) {
+            this.minTimestamp = minTimestamp;
+            this.maxTimestamp = maxTimestamp;
+        }
+
+        @ProcessElement
+        public void process(
+                @Element String line,
+                OutputReceiver<String> output
+        ) {
+            final Instant randomTimestamp = new Instant(ThreadLocalRandom.current()
+                    .nextLong(minTimestamp.getMillis(), maxTimestamp.getMillis()));
+
+            output.outputWithTimestamp(line, randomTimestamp);
+        }
+    }
+
     /**
      * A {@link DefaultValueFactory} that returns the current system time.
      */
@@ -94,36 +127,6 @@ public class WindowedWordCount {
                    + Duration.standardHours(1).getMillis();
         }
 
-    }
-
-
-    public static void runWindowedWordCount(Options options) throws IOException {
-        final String output = options.getOutput();
-        final Instant minTimestamp = new Instant(options.getMinTimestampMillis());
-        final Instant maxTimestamp = new Instant(options.getMaxTimestampMillis());
-
-
-        final Pipeline pipeline = Pipeline.create(options);
-
-        final PCollection<String> input = pipeline.apply(TextIO.read().from(options.getInputFile()))
-                .apply(ParDo.of(new AddTimestampFn(minTimestamp, maxTimestamp)));
-
-        final PCollection<String> windowedWords =
-                input.apply(Window.into(FixedWindows.of(Duration.standardMinutes(options.getWindowSize()))));
-
-        final PCollection<KV<String, Long>> wordCounts =
-                windowedWords.apply(CountWords.of());
-
-        wordCounts
-                .apply(MapElements.via(new FormatAsTextFn()))
-                .apply(new WriteOneFilePerWindow(output, options.getNumShards()));
-
-        final PipelineResult result = pipeline.run();
-        try {
-            result.waitUntilFinish();
-        } catch (Exception e) {
-            result.cancel();
-        }
     }
 
     static class CountWords
@@ -162,11 +165,5 @@ public class WindowedWordCount {
                     }))
                     .apply(Count.perElement());
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        final Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-
-        runWindowedWordCount(options);
     }
 }

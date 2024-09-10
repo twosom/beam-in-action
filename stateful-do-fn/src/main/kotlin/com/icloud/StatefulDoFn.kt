@@ -1,8 +1,6 @@
 package com.icloud
 
-import com.icloud.extensions.clear
-import com.icloud.extensions.kv
-import com.icloud.extensions.parDo
+import com.icloud.extensions.*
 import org.apache.beam.sdk.coders.DefaultCoder
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO
@@ -18,9 +16,7 @@ import org.apache.beam.sdk.state.ValueState
 import org.apache.beam.sdk.transforms.DoFn
 import org.apache.beam.sdk.transforms.MapElements
 import org.apache.beam.sdk.transforms.Reify
-import org.apache.beam.sdk.transforms.SerializableFunction
 import org.apache.beam.sdk.values.KV
-import org.apache.beam.sdk.values.TypeDescriptor
 import org.apache.beam.sdk.values.TypeDescriptors.kvs
 import org.apache.beam.sdk.values.TypeDescriptors.strings
 import org.joda.time.Instant
@@ -88,8 +84,8 @@ object StatefulDoFn {
             )
             .apply(
                 "Group By ride status",
-                MapElements.into(kvs(strings(), object : TypeDescriptor<TaxiRideInfo>() {}))
-                    .via(SerializableFunction { it.rideStatus kv it })
+                MapElements.into(kvs(strings(), TaxiRideInfo::class.typeDescriptor()))
+                    .kVia { it.rideStatus kv it }
             )
             .apply(
                 "Buffer with state",

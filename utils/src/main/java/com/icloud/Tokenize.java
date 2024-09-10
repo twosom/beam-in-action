@@ -1,26 +1,24 @@
 package com.icloud;
 
 import com.google.common.base.Strings;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.beam.sdk.transforms.FlatMapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class Tokenize
         extends PTransform<@NonNull PCollection<String>, @NonNull PCollection<String>> {
-
-    public static Tokenize of() {
-        return new Tokenize();
-    }
 
     private Tokenize() {
     }
 
+    public static Tokenize of() {
+        return new Tokenize();
+    }
 
     @Override
     public PCollection<String> expand(PCollection<String> input) {

@@ -1,5 +1,7 @@
 package com.icloud;
 
+import static com.icloud.TestUtils.timestampedValue;
+
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -19,21 +21,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static com.icloud.TestUtils.timestampedValue;
-
 @RunWith(JUnit4.class)
 public class TestDefaultTrigger {
 
-    @Rule
-    public TestPipeline p = TestPipeline.create();
-
-    private final Instant baseTime = new Instant(0);
-
     private static final Duration WINDOW_DURATION =
             Duration.standardSeconds(10L);
-
     private static final Duration ALLOWED_LATENESS =
             Duration.standardSeconds(5L);
+    private final Instant baseTime = new Instant(0);
+    @Rule
+    public TestPipeline p = TestPipeline.create();
 
     @Test
     public void test_default_trigger() {

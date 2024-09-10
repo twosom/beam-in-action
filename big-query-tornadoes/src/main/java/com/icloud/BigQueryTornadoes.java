@@ -1,5 +1,7 @@
 package com.icloud;
 
+import static org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead;
+
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.beam.sdk.Pipeline;
@@ -15,12 +17,26 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import static org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.TypedRead;
-
 public class BigQueryTornadoes {
 
     private static final String WEATHER_SAMPLES_TABLE =
             "apache-beam-testing.samples.weather_stations";
+
+    public static void main(String[] args) {
+        final Pipeline pipeline = PipelineUtils.create(args, Options.class);
+        final Options options = pipeline.getOptions().as(Options.class);
+
+        final PCollection<TableRow> input = pipeline.apply("ReadFromBigQuery",
+                BigQueryIO.readTableRows()
+                        .from(options.getInput())
+                        .withMethod(options.getReadMethod())
+        );
+
+        input.apply(new CountTornadoes())
+                .apply(LogUtils.of());
+
+        pipeline.run().waitUntilFinish();
+    }
 
     public interface Options
             extends PipelineOptions {
@@ -41,22 +57,6 @@ public class BigQueryTornadoes {
         TypedRead.Method getReadMethod();
 
         void setReadMethod(TypedRead.Method value);
-    }
-
-    public static void main(String[] args) {
-        final Pipeline pipeline = PipelineUtils.create(args, Options.class);
-        final Options options = pipeline.getOptions().as(Options.class);
-
-        final PCollection<TableRow> input = pipeline.apply("ReadFromBigQuery",
-                BigQueryIO.readTableRows()
-                        .from(options.getInput())
-                        .withMethod(options.getReadMethod())
-        );
-
-        input.apply(new CountTornadoes())
-                .apply(LogUtils.of());
-
-        pipeline.run().waitUntilFinish();
     }
 
     static class CountTornadoes

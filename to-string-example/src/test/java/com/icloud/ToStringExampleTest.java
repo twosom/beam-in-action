@@ -8,7 +8,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.jupiter.api.Test;
 
-
 class ToStringExampleTest {
 
     @Test

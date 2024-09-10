@@ -1,5 +1,10 @@
 package com.icloud;
 
+import static com.icloud.OptionUtils.createOption;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
+
+import java.security.SecureRandom;
+import java.util.*;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.GenerateSequence;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
@@ -27,12 +32,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
-import java.util.*;
-
-import static com.icloud.OptionUtils.createOption;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
-
 public class KafkaStreaming {
     private static final long MESSAGE_COUNT = 100;
 
@@ -49,17 +48,6 @@ public class KafkaStreaming {
     private static final int ALLOWED_LATENESS_TIME = 1;
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-
-
-    public interface KafkaStreamingOptions extends PipelineOptions {
-
-        @Description("Kafka Server host")
-        @Validation.Required
-        String getKafkaHost();
-
-        void setKafkaHost(String value);
-    }
-
 
     public static void main(String[] args) {
         final Duration windowSize = Duration.standardSeconds(WINDOW_TIME);
@@ -83,6 +71,15 @@ public class KafkaStreaming {
         consumer.run();
     }
 
+
+    public interface KafkaStreamingOptions extends PipelineOptions {
+
+        @Description("Kafka Server host")
+        @Validation.Required
+        String getKafkaHost();
+
+        void setKafkaHost(String value);
+    }
 
     static class KafkaConsumer {
 

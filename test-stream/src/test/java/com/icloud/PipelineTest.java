@@ -1,5 +1,7 @@
 package com.icloud;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -14,8 +16,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @RunWith(JUnit4.class)
 @SuppressWarnings("unchecked")

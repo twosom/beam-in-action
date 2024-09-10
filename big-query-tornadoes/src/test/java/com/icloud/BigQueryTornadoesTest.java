@@ -1,5 +1,8 @@
 package com.icloud;
 
+import static com.icloud.BigQueryTornadoes.ExtractTornadoesFn;
+import static com.icloud.BigQueryTornadoes.FormatCountsFn;
+
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.common.collect.ImmutableList;
 import org.apache.beam.sdk.Pipeline;
@@ -11,9 +14,6 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static com.icloud.BigQueryTornadoes.ExtractTornadoesFn;
-import static com.icloud.BigQueryTornadoes.FormatCountsFn;
 
 class BigQueryTornadoesTest {
 

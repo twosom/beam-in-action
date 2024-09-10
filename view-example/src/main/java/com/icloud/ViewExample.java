@@ -1,12 +1,11 @@
 package com.icloud;
 
+import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-
-import java.util.Map;
 
 public class ViewExample {
     public static void main(String[] args) {

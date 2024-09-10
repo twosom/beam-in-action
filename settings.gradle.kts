@@ -34,4 +34,6 @@ listOf(
     "ch1",
     "ch2",
     "ch3",
+    "ch4",
+    "beam-book-utils"
 ).forEach { include("beam-book:$it") }

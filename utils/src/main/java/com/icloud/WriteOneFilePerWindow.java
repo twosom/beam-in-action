@@ -1,5 +1,8 @@
 package com.icloud;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static org.apache.beam.sdk.io.FileBasedSink.*;
+
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.fs.ResolveOptions;
 import org.apache.beam.sdk.io.fs.ResourceId;
@@ -13,10 +16,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static org.apache.beam.sdk.io.FileBasedSink.*;
-
 
 public class WriteOneFilePerWindow
         extends PTransform<@NonNull PCollection<String>, @NonNull PDone> {

@@ -151,7 +151,7 @@ fun <T> T.timestampedValue(timestamp: Instant): TimestampedValue<T> =
     TimestampedValue.of(this, timestamp)
 
 
-val <InputT> PCollection<InputT>.typeWindowingStrategy: WindowingStrategy<InputT, BoundedWindow>
+val <InputT> PCollection<InputT>.typedWindowingStrategy: WindowingStrategy<InputT, BoundedWindow>
     @Suppress("UNCHECKED_CAST")
     get() = this.windowingStrategy as WindowingStrategy<InputT, BoundedWindow>
 

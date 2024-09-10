@@ -1,5 +1,11 @@
 package com.icloud;
 
+import static com.google.common.collect.Lists.reverse;
+import static java.util.stream.Collectors.toList;
+import static org.joda.time.Instant.now;
+
+import java.util.List;
+import java.util.stream.IntStream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.transforms.Create;
@@ -10,13 +16,6 @@ import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.stream.IntStream;
-
-import static com.google.common.collect.Lists.reverse;
-import static java.util.stream.Collectors.toList;
-import static org.joda.time.Instant.now;
 
 public class LatestExampleTest {
 

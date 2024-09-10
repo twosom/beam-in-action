@@ -1,12 +1,10 @@
 package com.icloud;
 
+import java.util.Objects;
 import org.apache.avro.reflect.Nullable;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.apache.beam.sdk.schemas.annotations.SchemaCreate;
-import org.joda.time.Instant;
-
-import java.util.Objects;
 
 @DefaultCoder(AvroCoder.class)
 public class GameActionInfo {

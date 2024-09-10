@@ -1,5 +1,8 @@
 package com.icloud;
 
+import static com.icloud.ExampleUtils.TOKENIZER_PATTERN;
+import static com.icloud.OptionUtils.createOption;
+
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
@@ -11,10 +14,25 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import static com.icloud.ExampleUtils.TOKENIZER_PATTERN;
-import static com.icloud.OptionUtils.createOption;
-
 public class WordCount {
+
+    public static void runWordCount(WordCountOptions options) {
+        final Pipeline p = Pipeline.create(options);
+
+        p.apply("ReadLines", TextIO.read().from(options.getInputFile()))
+                .apply(new CountWords())
+                .apply(MapElements.via(new FormatAsTextFn()))
+                .apply("WriteCounts", TextIO.write().to(options.getOutput()));
+
+
+        p.run().waitUntilFinish();
+    }
+
+    public static void main(String[] args) {
+        final WordCountOptions options =
+                createOption(args, WordCountOptions.class);
+        runWordCount(options);
+    }
 
     @VisibleForTesting
     static class ExtractWordsFn
@@ -57,24 +75,5 @@ public class WordCount {
                     .apply(Count.perElement());
         }
 
-    }
-
-
-    public static void runWordCount(WordCountOptions options) {
-        final Pipeline p = Pipeline.create(options);
-
-        p.apply("ReadLines", TextIO.read().from(options.getInputFile()))
-                .apply(new CountWords())
-                .apply(MapElements.via(new FormatAsTextFn()))
-                .apply("WriteCounts", TextIO.write().to(options.getOutput()));
-
-
-        p.run().waitUntilFinish();
-    }
-
-    public static void main(String[] args) {
-        final WordCountOptions options =
-                createOption(args, WordCountOptions.class);
-        runWordCount(options);
     }
 }

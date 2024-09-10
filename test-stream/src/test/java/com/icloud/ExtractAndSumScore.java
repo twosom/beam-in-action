@@ -1,13 +1,13 @@
 package com.icloud;
 
+import static org.apache.beam.sdk.values.TypeDescriptors.*;
+
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.Sum;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.checkerframework.checker.nullness.qual.NonNull;
-
-import static org.apache.beam.sdk.values.TypeDescriptors.*;
 
 public class ExtractAndSumScore
         extends PTransform<@NonNull PCollection<GameActionInfo>, @NonNull PCollection<KV<String, Integer>>> {

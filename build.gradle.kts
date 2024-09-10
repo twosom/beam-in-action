@@ -14,7 +14,7 @@ plugins {
     kotlin("jvm")
 }
 
-val beamVersion: String = "2.57.0"
+val beamVersion: String = "2.58.1"
 
 allprojects {
     group = "com.icloud"
@@ -103,7 +103,7 @@ allprojects {
         testImplementation("junit:junit:4.13.2")
 
 
-        if (project.name != "utils") {
+        if (project.name != "utils" && project.name != "beam-book-utils") {
             implementation(project(":utils"))
         }
     }

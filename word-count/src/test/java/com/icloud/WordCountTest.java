@@ -1,6 +1,10 @@
 package com.icloud;
 
+import static com.icloud.WordCount.ExtractWordsFn;
+
 import com.icloud.WordCount.CountWords;
+import java.util.Arrays;
+import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.PAssert;
@@ -10,13 +14,15 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static com.icloud.WordCount.ExtractWordsFn;
-
 class WordCountTest {
 
+    static final String[] WORDS_ARRAY =
+            new String[]{
+                    "hi there", "hi", "hi sue bob",
+                    "hi sue", "", "bob hi"
+            };
+    static final List<String> WORDS = Arrays.asList(WORDS_ARRAY);
+    static final String[] COUNTS_ARRAY = new String[]{"hi: 5", "there: 1", "sue: 2", "bob: 2"};
     private final Pipeline p =
             Pipeline.create();
 
@@ -33,16 +39,6 @@ class WordCountTest {
 
         p.run().waitUntilFinish();
     }
-
-    static final String[] WORDS_ARRAY =
-            new String[]{
-                    "hi there", "hi", "hi sue bob",
-                    "hi sue", "", "bob hi"
-            };
-
-    static final List<String> WORDS = Arrays.asList(WORDS_ARRAY);
-
-    static final String[] COUNTS_ARRAY = new String[]{"hi: 5", "there: 1", "sue: 2", "bob: 2"};
 
     @Test
     void testCountWords() {

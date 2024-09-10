@@ -1,6 +1,15 @@
 package com.icloud;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.icloud.WindowedWordCount.Options;
+import static com.icloud.WindowedWordCount.runWindowedWordCount;
+import static com.icloud.WriteOneFilePerWindow.PerWindowFiles;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.google.common.collect.ImmutableList;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.beam.sdk.io.FileBasedSink;
 import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.io.fs.ResolveOptions;
@@ -23,41 +32,22 @@ import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.icloud.WindowedWordCount.Options;
-import static com.icloud.WindowedWordCount.runWindowedWordCount;
-import static com.icloud.WriteOneFilePerWindow.PerWindowFiles;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 @RunWith(JUnit4.class)
 public class WindowedWordCountIT {
 
 
-    @Rule
-    public TestName testName = new TestName();
-
-    private static final String DEFAULT_INPUT = "gs://apache-beam-samples/shakespeare/sonnets.txt";
-
     static final int MAX_READ_RETRIES = 4;
-
     static final Duration DEFAULT_SLEEP_DURATION = Duration.standardSeconds(10L);
-
     static final FluentBackoff BACK_OFF_FACTORY =
             FluentBackoff.DEFAULT
                     .withInitialBackoff(DEFAULT_SLEEP_DURATION)
                     .withMaxRetries(MAX_READ_RETRIES);
+    private static final String DEFAULT_INPUT = "gs://apache-beam-samples/shakespeare/sonnets.txt";
+    @Rule
+    public TestName testName = new TestName();
 
     static WordCountsMatcher containsWordCounts(SortedMap<String, Long> expectedWordCounts) {
         return new WordCountsMatcher(expectedWordCounts);
-    }
-
-
-    public interface WindowedWordCountITOptions
-            extends Options, TestPipelineOptions, StreamingOptions {
     }
 
     @BeforeClass
@@ -120,7 +110,6 @@ public class WindowedWordCountIT {
         );
     }
 
-
     private WindowedWordCountITOptions batchOptions() {
         final WindowedWordCountITOptions options = defaultOptions();
         options.setStreaming(false);
@@ -153,6 +142,9 @@ public class WindowedWordCountIT {
         return options;
     }
 
+    public interface WindowedWordCountITOptions
+            extends Options, TestPipelineOptions, StreamingOptions {
+    }
 
     private static class WordCountsMatcher
             extends TypeSafeMatcher<List<ShardedFile>> {

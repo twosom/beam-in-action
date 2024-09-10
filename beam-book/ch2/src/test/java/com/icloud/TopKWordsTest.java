@@ -1,5 +1,7 @@
 package com.icloud;
 
+import static com.icloud.TestUtils.timestampedValue;
+
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -13,9 +15,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import static com.icloud.TestUtils.timestampedValue;
-
 
 @SuppressWarnings("unchecked")
 @RunWith(JUnit4.class)

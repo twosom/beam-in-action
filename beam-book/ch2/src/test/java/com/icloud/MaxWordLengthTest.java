@@ -1,5 +1,8 @@
 package com.icloud;
 
+import static com.icloud.TestUtils.timestampedValue;
+import static org.apache.beam.sdk.values.TypeDescriptors.strings;
+
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -13,16 +16,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static com.icloud.TestUtils.timestampedValue;
-import static org.apache.beam.sdk.values.TypeDescriptors.strings;
-
 @RunWith(JUnit4.class)
 public class MaxWordLengthTest {
 
+    private final Instant baseTime = new Instant(0);
     @Rule
     public TestPipeline p = TestPipeline.create();
-
-    private final Instant baseTime = new Instant(0);
 
     @Test
     public void testWordLength() {

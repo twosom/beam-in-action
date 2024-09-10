@@ -1,5 +1,7 @@
 package com.icloud;
 
+import static com.icloud.CalculateTeamScores.TEN_MINUTES;
+
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
@@ -10,8 +12,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.joda.time.Duration;
-
-import static com.icloud.CalculateTeamScores.TEN_MINUTES;
 
 @VisibleForTesting
 public class CalculateUserScores

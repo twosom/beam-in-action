@@ -63,7 +63,7 @@ object SportTracker {
                 .kVia {
                     KV.of(
                         "",
-                        "${it.key}\t${it.value.length}\t${if (it.value.time > 0) it.value.time * 1000 / (60.0 * it.value.length) else 0}"
+                        "${it.key}\t${it.value.length}\t${if (it.value.duration > 0) it.value.duration * 1000 / (60.0 * it.value.length) else 0}"
                     )
                 }
         )
@@ -83,8 +83,8 @@ object SportTracker {
         pipeline: Pipeline,
     ) =
         with(pipeline.coderRegistry) {
-            registerCoderForClass(Position::class.java, PositionCoder())
-            registerCoderForClass(Metric::class.java, MetricCoder())
+            registerCoderForClass(Position::class.java, PositionCoder.of())
+            registerCoderForClass(Metric::class.java, MetricCoder.of())
         }
 
     @VisibleForTesting
@@ -144,7 +144,7 @@ object SportTracker {
                 },
                 Duration.standardSeconds(1),
                 previousWatermark
-            );
+            )
         }
     }
 }

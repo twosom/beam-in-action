@@ -1,6 +1,10 @@
 package com.icloud;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.common.collect.Streams;
+import java.util.Arrays;
+import java.util.List;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Count;
@@ -16,11 +20,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnit4.class)
 public class WindowExampleTest {

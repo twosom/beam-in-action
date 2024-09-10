@@ -1,7 +1,12 @@
 package com.icloud;
 
+import static org.apache.beam.sdk.values.TypeDescriptors.kvs;
+import static org.apache.beam.sdk.values.TypeDescriptors.strings;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.icloud.watermark.policy.PreventIdleWatermarkPolicy;
+import java.io.Serializable;
+import java.util.Comparator;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -16,12 +21,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
-
-import java.io.Serializable;
-import java.util.Comparator;
-
-import static org.apache.beam.sdk.values.TypeDescriptors.kvs;
-import static org.apache.beam.sdk.values.TypeDescriptors.strings;
 
 public class MaxWordLength {
     public static void main(String[] args) {
@@ -47,7 +46,7 @@ public class MaxWordLength {
         final PCollection<TimestampedValue<String>> output = computeLongestWord(lines);
 
         output.apply(
-                "Convert To KV",
+                        "Convert To KV",
                         MapElements.into(kvs(strings(), strings()))
                                 .via(kv -> KV.of(kv.getTimestamp().toString(), kv.getValue()))
                 )

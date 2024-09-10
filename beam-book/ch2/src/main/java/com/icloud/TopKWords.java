@@ -1,7 +1,11 @@
 package com.icloud;
 
+import static org.apache.beam.sdk.values.TypeDescriptors.strings;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.icloud.watermark.policy.PreventIdleWatermarkPolicy;
+import java.io.Serializable;
+import java.util.Comparator;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.options.Description;
@@ -20,30 +24,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
-import java.io.Serializable;
-import java.util.Comparator;
-
-import static org.apache.beam.sdk.values.TypeDescriptors.strings;
-
 public class TopKWords {
-
-    public interface TopKWordsOptions
-            extends CommonKafkaOptions {
-
-        @Validation.Required
-        @Description("length of the window ::: UNIT = SECOND")
-        Integer getWindowLength();
-
-        void setWindowLength(Integer value);
-
-        @Validation.Required
-        @Description("k value for Top K")
-        Integer getK();
-
-        void setK(Integer value);
-
-    }
-
 
     public static void main(String[] args) {
         final Pipeline pipeline = PipelineUtils.create(args, TopKWordsOptions.class);
@@ -98,5 +79,22 @@ public class TopKWords {
                                 (a, b) -> Long.compare(a.getValue(), b.getValue())
                 ).withoutDefaults())
                 .apply(Flatten.iterables());
+    }
+
+    public interface TopKWordsOptions
+            extends CommonKafkaOptions {
+
+        @Validation.Required
+        @Description("length of the window ::: UNIT = SECOND")
+        Integer getWindowLength();
+
+        void setWindowLength(Integer value);
+
+        @Validation.Required
+        @Description("k value for Top K")
+        Integer getK();
+
+        void setK(Integer value);
+
     }
 }

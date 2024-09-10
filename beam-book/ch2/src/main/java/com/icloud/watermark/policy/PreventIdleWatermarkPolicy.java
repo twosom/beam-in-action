@@ -1,15 +1,14 @@
 package com.icloud.watermark.policy;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Optional;
 import org.apache.beam.sdk.io.kafka.KafkaRecord;
 import org.apache.beam.sdk.io.kafka.TimestampPolicy;
 import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
-
-import java.util.Optional;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * The Watermark policy for prevent idle status topic partition.
@@ -24,17 +23,8 @@ public class PreventIdleWatermarkPolicy<K, V>
 
     private final Duration maxDelay;
     private final SerializableFunction<KafkaRecord<K, V>, Instant> timestampFunction;
-    private Instant maxEventTimestamp;
     private final boolean preventIdleTopicPartition;
-
-    public static <K, V> PreventIdleWatermarkPolicy<K, V> of(
-            SerializableFunction<KafkaRecord<K, V>, Instant> timestampFunction,
-            Duration maxDelay,
-            Optional<Instant> previousWatermark,
-            boolean preventIdleTopicPartition
-    ) {
-        return new PreventIdleWatermarkPolicy<>(timestampFunction, maxDelay, previousWatermark, preventIdleTopicPartition);
-    }
+    private Instant maxEventTimestamp;
 
     private PreventIdleWatermarkPolicy(
             SerializableFunction<KafkaRecord<K, V>, Instant> timestampFunction,
@@ -48,6 +38,15 @@ public class PreventIdleWatermarkPolicy<K, V>
         this.maxEventTimestamp =
                 previousWatermark.orElse(BoundedWindow.TIMESTAMP_MIN_VALUE)
                         .plus(maxDelay);
+    }
+
+    public static <K, V> PreventIdleWatermarkPolicy<K, V> of(
+            SerializableFunction<KafkaRecord<K, V>, Instant> timestampFunction,
+            Duration maxDelay,
+            Optional<Instant> previousWatermark,
+            boolean preventIdleTopicPartition
+    ) {
+        return new PreventIdleWatermarkPolicy<>(timestampFunction, maxDelay, previousWatermark, preventIdleTopicPartition);
     }
 
     @Override

@@ -1,4 +1,2 @@
-/**
- * Beam extensions for Kotlin
- */
+/** Beam extensions for Kotlin */
 package com.icloud.extensions;

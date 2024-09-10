@@ -5,7 +5,6 @@ import org.apache.beam.sdk.state.StateSpecs
 import org.apache.beam.sdk.transforms.*
 import org.apache.beam.sdk.values.PCollection
 import org.joda.time.Duration
-import org.joda.time.Instant
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
