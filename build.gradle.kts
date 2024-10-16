@@ -14,7 +14,7 @@ plugins {
     kotlin("jvm")
 }
 
-val beamVersion: String = "2.58.1"
+val beamVersion: String = "2.59.0"
 
 allprojects {
     group = "com.icloud"
@@ -33,7 +33,6 @@ allprojects {
     }
 
     repositories {
-        mavenLocal()
         mavenCentral()
         maven {
             url = uri("https://repository.apache.org/content/repositories/snapshots/")
@@ -82,6 +81,7 @@ allprojects {
         beamRuntimeOnly(
             "beam-sdks-java-io-google-cloud-platform",
             "beam-runners-google-cloud-dataflow-java",
+            "beam-runners-flink-1.18"
         )
 
         // logger
