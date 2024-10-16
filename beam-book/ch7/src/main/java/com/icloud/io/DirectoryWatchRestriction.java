@@ -28,7 +28,6 @@ class DirectoryWatchRestriction
     this.finished = finished;
   }
 
-
   public Set<String> getAlreadyProcessed() {
     return alreadyProcessed;
   }

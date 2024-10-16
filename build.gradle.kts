@@ -12,9 +12,10 @@ plugins {
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
     kotlin("jvm")
+    id("com.diffplug.spotless") version "6.25.0"
 }
 
-val beamVersion: String = "2.59.0"
+val beamVersion: String = "2.60.0"
 
 allprojects {
     group = "com.icloud"
@@ -25,6 +26,7 @@ allprojects {
         apply("application")
         apply("org.jetbrains.kotlin.jvm")
         apply("com.github.johnrengelman.shadow")
+        apply("com.diffplug.spotless")
     }
 
     java {
@@ -42,6 +44,11 @@ allprojects {
         }
         maven {
             url = uri("https://packages.confluent.io/maven/")
+        }
+
+        maven {
+            name = "Apache Releases"
+            url = uri("https://repository.apache.org/content/repositories/orgapachebeam-1387")
         }
     }
 
@@ -74,19 +81,19 @@ allprojects {
             "beam-sdks-java-io-hadoop-file-system",
             "beam-sdks-java-extensions-join-library",
             "beam-sdks-java-extensions-json-jackson",
-            "beam-sdks-java-io-amazon-web-services2"
+            "beam-sdks-java-io-amazon-web-services2",
         )
         implementation("org.apache.kafka:kafka-clients:3.4.0")
 
         beamRuntimeOnly(
             "beam-sdks-java-io-google-cloud-platform",
             "beam-runners-google-cloud-dataflow-java",
-            "beam-runners-flink-1.18"
+            "beam-runners-flink-1.18",
         )
 
         // logger
         implementation("org.slf4j:slf4j-jdk14:1.7.32")
-        implementation("ch.qos.logback:logback-classic:1.3.1")
+        implementation("ch.qos.logback:logback-classic:1.4.12")
 
         // lombok
         compileOnly("org.projectlombok:lombok:1.18.20")
@@ -102,12 +109,10 @@ allprojects {
         testImplementation("org.junit.vintage:junit-vintage-engine")
         testImplementation("junit:junit:4.13.2")
 
-
         if (project.name != "utils" && project.name != "beam-book-utils") {
             implementation(project(":utils"))
         }
     }
-
 
     tasks {
         test {
@@ -123,32 +128,48 @@ allprojects {
         build {
             println(
                 """
-                    ######################################
-                    ############ BUILD START #############
-                    ######################################
-                """.trimIndent()
+                ######################################
+                ############ BUILD START #############
+                ######################################
+                """.trimIndent(),
             )
 
             println("Main Class Name = $mainClassName")
             application.mainClass.set(mainClassName)
         }
-
     }
 
     kotlin {
         jvmToolchain(11)
     }
+
+    spotless {
+        java {
+            importOrder()
+            cleanthat()
+            removeUnusedImports()
+            googleJavaFormat()
+        }
+        kotlinGradle {
+            target("*.gradle.kts")
+            ktlint()
+        }
+        yaml {
+            target("src/**/*.yaml", "src/**/*.yml")
+            jackson()
+            prettier()
+        }
+    }
 }
 
 fun DependencyHandlerScope.beamImplementation(vararg args: String) {
     for (arg in args) {
-        implementation("org.apache.beam:${arg}")
+        implementation("org.apache.beam:$arg")
     }
 }
 
 fun DependencyHandlerScope.beamRuntimeOnly(vararg args: String) {
     for (arg in args) {
-        runtimeOnly("org.apache.beam:${arg}")
+        runtimeOnly("org.apache.beam:$arg")
     }
 }
-

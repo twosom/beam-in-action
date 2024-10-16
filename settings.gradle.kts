@@ -26,8 +26,8 @@ listOf(
     "custom-windows",
     "test-stream",
     "side-input-pattern",
+    "sdf",
 ).forEach { include(it) }
-
 
 // module settings for beam book
 listOf(
@@ -36,5 +36,5 @@ listOf(
     "ch3",
     "ch4",
     "ch7",
-    "beam-book-utils"
+    "beam-book-utils",
 ).forEach { include("beam-book:$it") }

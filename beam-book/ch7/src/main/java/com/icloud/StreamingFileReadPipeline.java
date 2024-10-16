@@ -12,8 +12,7 @@ public class StreamingFileReadPipeline {
     p.apply(DirectoryWatch.read("/Users/hope/Downloads"))
         .apply(Reshuffle.viaRandomKey())
         .apply(FileRead.read())
-        .apply(LogUtils.of())
-    ;
+        .apply(LogUtils.of());
 
     p.run();
   }

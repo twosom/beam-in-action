@@ -25,7 +25,6 @@ import org.joda.time.Instant;
 import org.joda.time.MutableDateTime;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
