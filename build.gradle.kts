@@ -37,9 +37,6 @@ allprojects {
     repositories {
         mavenCentral()
         maven {
-            url = uri("https://repository.apache.org/content/repositories/snapshots/")
-        }
-        maven {
             url = uri("https://repo.maven.apache.org/maven2/")
         }
         maven {
