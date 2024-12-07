@@ -15,7 +15,7 @@ plugins {
     id("com.diffplug.spotless") version "6.25.0"
 }
 
-val beamVersion: String = "2.60.0"
+val beamVersion: String = "2.61.0"
 
 allprojects {
     group = "com.icloud"
