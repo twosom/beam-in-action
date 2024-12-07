@@ -31,6 +31,8 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+node_modules
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
