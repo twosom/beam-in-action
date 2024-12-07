@@ -27,6 +27,8 @@ listOf(
     "test-stream",
     "side-input-pattern",
     "sdf",
+    "lookup-table",
+    "looping-timer",
 ).forEach { include(it) }
 
 // module settings for beam book
